@@ -1,0 +1,1814 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RIFT.GG — e스포츠 정보 플랫폼</title>
+<style>
+/* ============================================================
+   TOKENS
+   ============================================================ */
+:root{
+  --plane:#0d0d12;
+  --surface-1:#15151c;
+  --surface-2:#1c1c25;
+  --surface-3:#24242f;
+  --ink-1:#ffffff;
+  --ink-2:#c3c2c9;
+  --ink-3:#8a8a95;
+  --line:#2b2b36;
+  --line-soft:#22222c;
+  --accent:#3987e5;
+  --accent-soft:rgba(57,135,229,.14);
+  --violet:#9085e9;
+
+  /* validated categorical slots (dark, surface #15151c) */
+  --series-1:#3987e5;
+  --series-2:#d95926;
+  --series-3:#199e70;
+  --series-4:#c98500;
+
+  --good:#0ca30c;
+  --warn:#fab219;
+  --crit:#d03b3b;
+
+  --grid:#26262f;
+  --axis:#33333e;
+
+  --r-sm:8px; --r-md:12px; --r-lg:16px; --r-xl:22px;
+  --sans:system-ui,-apple-system,"Segoe UI","Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.28);
+}
+html[data-theme="light"]{
+  --plane:#f4f4f2;
+  --surface-1:#fcfcfb;
+  --surface-2:#ffffff;
+  --surface-3:#f0efec;
+  --ink-1:#0b0b0b;
+  --ink-2:#52514e;
+  --ink-3:#898781;
+  --line:#e1e0d9;
+  --line-soft:#eceae4;
+  --accent:#2a78d6;
+  --accent-soft:rgba(42,120,214,.10);
+  --violet:#4a3aa7;
+  --series-1:#2a78d6;
+  --series-2:#eb6834;
+  --series-3:#1baf7a;
+  --series-4:#eda100;
+  --grid:#e6e5df;
+  --axis:#c3c2b7;
+  --shadow:0 1px 2px rgba(11,11,11,.06),0 8px 24px rgba(11,11,11,.06);
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--plane);
+  color:var(--ink-1);
+  font-family:var(--sans);
+  font-size:14px;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:inherit;text-decoration:none;}
+button{font-family:inherit;font-size:inherit;cursor:pointer;border:0;background:none;color:inherit;}
+h1,h2,h3,h4{margin:0;line-height:1.25;letter-spacing:-.01em;}
+::-webkit-scrollbar{width:10px;height:10px;}
+::-webkit-scrollbar-thumb{background:var(--surface-3);border-radius:20px;border:3px solid var(--plane);}
+
+/* ============================================================
+   LAYOUT
+   ============================================================ */
+.shell{max-width:1240px;margin:0 auto;padding:0 20px 72px;}
+
+.topbar{
+  position:sticky;top:0;z-index:50;
+  background:color-mix(in srgb,var(--plane) 88%,transparent);
+  backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--line-soft);
+}
+.topbar-inner{max-width:1240px;margin:0 auto;padding:0 20px;display:flex;align-items:center;gap:28px;height:58px;}
+.brand{display:flex;align-items:center;gap:9px;font-weight:800;letter-spacing:-.03em;font-size:17px;}
+.brand-mark{
+  width:26px;height:26px;border-radius:7px;flex:none;
+  background:linear-gradient(140deg,var(--accent),var(--violet));
+  display:grid;place-items:center;color:#fff;font-size:13px;font-weight:900;
+}
+.nav{display:flex;gap:2px;flex:1;overflow-x:auto;}
+.nav button{
+  padding:7px 13px;border-radius:99px;color:var(--ink-3);font-weight:600;font-size:13.5px;white-space:nowrap;
+  transition:color .15s,background .15s;
+}
+.nav button:hover{color:var(--ink-1);}
+.nav button[aria-current="page"]{background:var(--surface-3);color:var(--ink-1);}
+.topbar-tools{display:flex;align-items:center;gap:8px;}
+.icon-btn{
+  width:32px;height:32px;border-radius:9px;display:grid;place-items:center;
+  color:var(--ink-3);border:1px solid var(--line);
+}
+.icon-btn:hover{color:var(--ink-1);background:var(--surface-2);}
+
+.view{display:none;padding-top:26px;}
+.view.is-active{display:block;animation:fade .22s ease;}
+@keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+
+.page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:18px;flex-wrap:wrap;}
+.page-title{font-size:24px;font-weight:800;letter-spacing:-.025em;}
+.page-sub{color:var(--ink-3);font-size:13px;margin-top:3px;}
+
+.grid{display:grid;gap:16px;}
+.cols-2{grid-template-columns:1fr 1fr;}
+.cols-3{grid-template-columns:repeat(3,1fr);}
+.cols-main{grid-template-columns:minmax(0,1fr) 336px;align-items:start;}
+
+.card{
+  background:var(--surface-1);
+  border:1px solid var(--line-soft);
+  border-radius:var(--r-lg);
+  overflow:hidden;
+}
+.card-head{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:14px 16px;border-bottom:1px solid var(--line-soft);
+}
+.card-title{font-size:14px;font-weight:700;letter-spacing:-.01em;}
+.card-body{padding:16px;}
+.card-link{font-size:12.5px;color:var(--ink-3);font-weight:600;}
+.card-link:hover{color:var(--accent);}
+
+/* ============================================================
+   ATOMS
+   ============================================================ */
+.tag{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:11px;font-weight:700;letter-spacing:.02em;
+  padding:3px 8px;border-radius:6px;
+  background:var(--surface-3);color:var(--ink-2);
+}
+.tag-live{background:rgba(208,59,59,.16);color:#ff7a7a;}
+.tag-ai{background:linear-gradient(120deg,rgba(57,135,229,.2),rgba(144,133,233,.2));color:#a9b8ff;}
+html[data-theme="light"] .tag-live{color:#c22;}
+html[data-theme="light"] .tag-ai{color:#3f3aa0;}
+.dot-live{width:6px;height:6px;border-radius:50%;background:#ff5757;animation:pulse 1.4s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.35;transform:scale(.8);}}
+
+.badge{
+  width:30px;height:30px;border-radius:8px;flex:none;
+  display:grid;place-items:center;font-weight:800;font-size:10.5px;letter-spacing:-.02em;color:#fff;
+}
+.badge.lg{width:44px;height:44px;font-size:14px;border-radius:11px;}
+.badge.xl{width:62px;height:62px;font-size:19px;border-radius:16px;}
+.badge.sm{width:22px;height:22px;font-size:8.5px;border-radius:6px;}
+
+.pill-row{display:flex;gap:3px;}
+.pill{width:16px;height:16px;border-radius:5px;display:grid;place-items:center;font-size:9px;font-weight:800;}
+.pill.w{background:rgba(12,163,12,.18);color:#3fd23f;}
+.pill.l{background:rgba(208,59,59,.16);color:#ff7a7a;}
+html[data-theme="light"] .pill.w{color:#0a7d0a;}
+html[data-theme="light"] .pill.l{color:#b52d2d;}
+
+.muted{color:var(--ink-3);}
+.num{font-variant-numeric:tabular-nums;}
+.sep{height:1px;background:var(--line-soft);margin:12px 0;}
+
+.seg{display:inline-flex;background:var(--surface-2);border:1px solid var(--line-soft);border-radius:10px;padding:3px;gap:2px;}
+.seg button{padding:5px 12px;border-radius:7px;font-size:12.5px;font-weight:600;color:var(--ink-3);}
+.seg button[aria-pressed="true"]{background:var(--surface-3);color:var(--ink-1);}
+
+.chip-row{display:flex;gap:6px;flex-wrap:wrap;}
+.chip{
+  padding:5px 11px;border-radius:99px;border:1px solid var(--line);
+  font-size:12.5px;font-weight:600;color:var(--ink-3);
+}
+.chip:hover{color:var(--ink-1);border-color:var(--ink-3);}
+.chip[aria-pressed="true"]{background:var(--accent-soft);border-color:transparent;color:var(--accent);}
+html[data-theme="light"] .chip[aria-pressed="true"]{color:var(--accent);}
+
+/* ============================================================
+   MATCH LIST
+   ============================================================ */
+.day-label{
+  font-size:12.5px;font-weight:700;color:var(--ink-3);
+  margin:22px 0 9px;display:flex;align-items:center;gap:8px;
+}
+.day-label::after{content:"";flex:1;height:1px;background:var(--line-soft);}
+
+.match{
+  display:grid;grid-template-columns:78px minmax(0,1fr) auto;align-items:center;gap:14px;
+  padding:12px 16px;border:1px solid var(--line-soft);border-radius:var(--r-md);
+  background:var(--surface-1);margin-bottom:8px;
+  transition:border-color .15s,transform .15s;
+}
+.match:hover{border-color:var(--line);transform:translateX(2px);}
+.match-time{font-size:12.5px;color:var(--ink-3);font-weight:600;text-align:center;line-height:1.3;}
+.match-time b{display:block;color:var(--ink-1);font-size:14px;font-weight:700;}
+.match-teams{display:flex;flex-direction:column;gap:7px;min-width:0;}
+.mt-row{display:flex;align-items:center;gap:9px;min-width:0;}
+.mt-name{font-weight:600;font-size:13.5px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.mt-score{font-size:15px;font-weight:800;width:18px;text-align:center;}
+.mt-row.lose .mt-name,.mt-row.lose .mt-score{color:var(--ink-3);}
+.match-actions{display:flex;align-items:center;gap:8px;}
+.btn-ai{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:7px 12px;border-radius:9px;font-size:12.5px;font-weight:700;
+  background:linear-gradient(120deg,rgba(57,135,229,.16),rgba(144,133,233,.16));
+  color:#a9b8ff;border:1px solid rgba(144,133,233,.22);white-space:nowrap;
+}
+.btn-ai:hover{filter:brightness(1.25);}
+html[data-theme="light"] .btn-ai{color:#3f3aa0;border-color:rgba(74,58,167,.2);}
+
+/* ============================================================
+   STANDINGS
+   ============================================================ */
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{
+  text-align:left;font-size:11px;font-weight:700;letter-spacing:.04em;
+  color:var(--ink-3);padding:0 10px 9px;border-bottom:1px solid var(--line-soft);white-space:nowrap;
+}
+td{padding:10px;border-bottom:1px solid var(--line-soft);vertical-align:middle;}
+tbody tr:last-child td{border-bottom:0;}
+tbody tr:hover{background:var(--surface-2);}
+.t-right{text-align:right;}
+.t-center{text-align:center;}
+.rank{font-weight:800;font-size:13px;width:28px;color:var(--ink-3);}
+.rank.q{color:var(--accent);}
+.team-cell{display:flex;align-items:center;gap:9px;font-weight:650;}
+.diff-pos{color:#3fd23f;}
+.diff-neg{color:#ff7a7a;}
+html[data-theme="light"] .diff-pos{color:#067a06;}
+html[data-theme="light"] .diff-neg{color:#b52d2d;}
+.qual-note{display:flex;gap:16px;flex-wrap:wrap;font-size:11.5px;color:var(--ink-3);margin-top:12px;}
+.qual-note span{display:flex;align-items:center;gap:6px;}
+.qual-key{width:8px;height:8px;border-radius:3px;}
+
+/* ============================================================
+   TEAM / PLAYER
+   ============================================================ */
+.team-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(196px,1fr));gap:12px;}
+.team-card{
+  background:var(--surface-1);border:1px solid var(--line-soft);border-radius:var(--r-lg);
+  padding:16px;display:flex;flex-direction:column;gap:11px;transition:border-color .15s,transform .15s;
+  position:relative;overflow:hidden;
+}
+.team-card::before{content:"";position:absolute;inset:0 0 auto;height:3px;background:var(--tc,var(--accent));}
+.team-card:hover{transform:translateY(-2px);border-color:var(--line);}
+.team-card h4{font-size:14.5px;font-weight:750;}
+.team-meta{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-3);}
+
+.roster{display:grid;gap:8px;}
+.roster-row{
+  display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:11px;
+  padding:9px 11px;border-radius:var(--r-md);background:var(--surface-2);
+  border:1px solid transparent;transition:border-color .15s;
+}
+.roster-row:hover{border-color:var(--line);}
+.pos{
+  font-size:9.5px;font-weight:800;letter-spacing:.03em;color:var(--ink-3);
+  text-align:center;padding:4px 0;border-radius:6px;background:var(--surface-3);
+}
+.pl-name{font-weight:700;font-size:13.5px;}
+.pl-real{font-size:11.5px;color:var(--ink-3);}
+.kda{font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums;}
+
+.stat-tile{background:var(--surface-2);border-radius:var(--r-md);padding:13px 14px;}
+.stat-label{font-size:11.5px;color:var(--ink-3);font-weight:600;}
+.stat-value{font-size:23px;font-weight:800;letter-spacing:-.03em;margin-top:2px;}
+.stat-delta{font-size:11.5px;font-weight:700;margin-top:1px;}
+
+/* ============================================================
+   AI REPORT
+   ============================================================ */
+.ai-hero{
+  border-radius:var(--r-xl);padding:26px;
+  background:
+    radial-gradient(900px 320px at 88% -30%,rgba(144,133,233,.22),transparent 62%),
+    radial-gradient(700px 300px at 8% 120%,rgba(57,135,229,.18),transparent 60%),
+    var(--surface-1);
+  border:1px solid var(--line-soft);
+}
+.ai-vs{display:flex;align-items:center;gap:20px;flex-wrap:wrap;}
+.ai-side{display:flex;align-items:center;gap:12px;}
+.ai-side .nm{font-size:19px;font-weight:800;letter-spacing:-.02em;}
+.ai-side .sub{font-size:12px;color:var(--ink-3);}
+.ai-score{font-size:34px;font-weight:900;letter-spacing:-.04em;font-variant-numeric:tabular-nums;}
+.ai-score .l{color:var(--ink-3);}
+.ai-summary{
+  margin-top:20px;font-size:16.5px;line-height:1.62;font-weight:550;letter-spacing:-.01em;
+  border-left:3px solid var(--violet);padding-left:16px;color:var(--ink-1);
+}
+.ai-meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:16px;}
+
+/* ---- 세트 탭 ---- */
+.set-bar{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 0;}
+.set-tab{
+  display:flex;flex-direction:column;gap:2px;align-items:flex-start;
+  padding:9px 15px;border-radius:12px;border:1px solid var(--line-soft);
+  background:var(--surface-1);min-width:118px;transition:border-color .15s,background .15s;
+}
+.set-tab:hover{border-color:var(--line);}
+.set-tab[aria-pressed="true"]{background:var(--surface-3);border-color:transparent;}
+.st-n{font-size:13px;font-weight:800;letter-spacing:-.01em;}
+.st-w{font-size:11px;color:var(--ink-3);font-weight:600;display:flex;align-items:center;gap:5px;}
+.set-tab[aria-pressed="true"] .st-w{color:var(--ink-2);}
+
+.set-row{
+  display:grid;grid-template-columns:58px minmax(0,1fr) 216px auto;gap:16px;align-items:center;
+  padding:15px 0;border-bottom:1px solid var(--line-soft);
+}
+.set-row:last-child{border-bottom:0;}
+.set-no{font-size:12.5px;font-weight:800;}
+.set-no small{display:block;font-size:10.5px;color:var(--ink-3);font-weight:700;margin-top:2px;}
+.set-hl{font-size:13.5px;font-weight:650;line-height:1.55;}
+.set-meta{display:flex;align-items:center;gap:7px;margin-top:5px;flex-wrap:wrap;}
+.gdbar{position:relative;height:24px;}
+.gdbar .zero{position:absolute;left:50%;top:2px;bottom:2px;width:1px;background:var(--axis);}
+.gdbar .fill{position:absolute;top:6px;height:12px;border-radius:3px;}
+.gdbar .lbl{position:absolute;top:3px;font-size:11px;font-weight:800;color:var(--ink-2);font-variant-numeric:tabular-nums;line-height:18px;}
+.gdbar .lbl.in{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.35);}
+
+.conf{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--ink-3);font-weight:600;}
+.conf-track{width:70px;height:5px;border-radius:99px;background:var(--surface-3);overflow:hidden;}
+.conf-fill{height:100%;border-radius:99px;background:var(--accent);}
+
+.phase{display:grid;grid-template-columns:104px minmax(0,1fr);gap:16px;padding:16px 0;border-bottom:1px solid var(--line-soft);}
+.phase:last-child{border-bottom:0;}
+.phase-k{font-size:12.5px;font-weight:800;color:var(--ink-1);}
+.phase-t{font-size:11.5px;color:var(--ink-3);font-weight:600;margin-top:1px;}
+.phase-body{font-size:13.5px;line-height:1.72;color:var(--ink-2);}
+.phase-body b{color:var(--ink-1);font-weight:700;}
+.phase-tags{display:flex;gap:5px;margin-top:9px;flex-wrap:wrap;}
+
+.moment{
+  display:grid;grid-template-columns:58px minmax(0,1fr);gap:14px;padding:13px 0;border-bottom:1px solid var(--line-soft);
+}
+.moment:last-child{border-bottom:0;}
+.moment-t{font-size:13px;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums;}
+.moment-h{font-size:13.5px;font-weight:700;margin-bottom:3px;}
+.moment-d{font-size:12.5px;color:var(--ink-2);line-height:1.65;}
+.swing{font-size:11.5px;font-weight:800;font-variant-numeric:tabular-nums;margin-top:5px;}
+
+/* ---- 드래프트 보드 (방송 밴픽 표) ---- */
+.draft-scroll{overflow-x:auto;padding-bottom:6px;}
+.draft{
+  display:grid;
+  grid-template-columns:152px repeat(20,minmax(44px,1fr));
+  gap:5px;min-width:1060px;align-items:end;
+}
+.dp{
+  font-size:10.5px;font-weight:800;letter-spacing:.04em;text-align:center;
+  padding:5px 0;border-radius:7px;margin-bottom:2px;
+}
+.dp.ban{background:rgba(208,59,59,.14);color:#ff8f8f;}
+.dp.pick{background:var(--accent-soft);color:var(--accent);}
+html[data-theme="light"] .dp.ban{color:#a82a2a;}
+
+.dside{
+  display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;
+  padding-bottom:20px;min-width:0;
+}
+.dside .dnm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11.5px;}
+.dside-tag{font-size:9px;font-weight:800;padding:2px 5px;border-radius:4px;letter-spacing:.03em;}
+.dside-tag.b{background:rgba(57,135,229,.2);color:#7fb4f5;}
+.dside-tag.r{background:rgba(217,89,38,.2);color:#f09a70;}
+html[data-theme="light"] .dside-tag.b{color:#1c5cab;}
+html[data-theme="light"] .dside-tag.r{color:#a8410f;}
+
+.slot{display:flex;flex-direction:column;gap:3px;min-width:0;}
+.tile{
+  width:100%;aspect-ratio:1;border-radius:9px;position:relative;overflow:hidden;
+  display:grid;place-items:center;font-size:12.5px;font-weight:800;color:#fff;
+  text-shadow:0 1px 3px rgba(0,0,0,.55);
+}
+.tile .ord{
+  position:absolute;top:1px;left:4px;font-size:9px;font-weight:800;
+  opacity:.9;text-shadow:0 1px 2px rgba(0,0,0,.8);
+}
+.tile .pos{
+  position:absolute;bottom:0;left:0;right:0;font-size:8px;font-weight:800;
+  letter-spacing:.03em;text-align:center;background:rgba(0,0,0,.42);padding:1px 0;
+  color:#fff;border-radius:0;
+}
+.tile.ban{filter:grayscale(.9) brightness(.5);}
+.tile.ban::after{
+  content:"";position:absolute;inset:-20%;
+  background:linear-gradient(135deg,transparent 47.5%,#ff5b5b 47.5%,#ff5b5b 52.5%,transparent 52.5%);
+}
+.tile.key{box-shadow:0 0 0 2px var(--ink-1),0 0 0 4px var(--surface-1);}
+.tile-empty{width:100%;aspect-ratio:1;border-radius:9px;background:var(--surface-2);opacity:.35;}
+.slot-nm{
+  font-size:9.5px;line-height:1.25;text-align:center;color:var(--ink-3);font-weight:600;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;height:12px;
+}
+.slot-nm.on{color:var(--ink-2);}
+.draft-legend{display:flex;gap:16px;flex-wrap:wrap;font-size:11.5px;color:var(--ink-3);font-weight:600;margin-bottom:14px;}
+.draft-legend b{color:var(--ink-2);}
+
+.focus-box{
+  display:grid;grid-template-columns:auto minmax(0,1fr);gap:16px;align-items:center;
+  background:var(--surface-2);border-radius:var(--r-md);padding:14px 16px;margin-top:16px;
+}
+.focus-champs{display:flex;gap:7px;}
+.focus-txt{font-size:13px;line-height:1.7;color:var(--ink-2);}
+
+.mini{display:flex;flex-direction:column;gap:3px;width:40px;flex:none;}
+.mini .slot-nm{height:auto;font-size:9px;}
+
+.bp-summary{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:16px;}
+.bp-col h5{font-size:11.5px;font-weight:800;color:var(--ink-3);margin:0 0 9px;letter-spacing:.03em;}
+.bp-line{display:flex;align-items:flex-start;gap:7px;flex-wrap:wrap;margin-bottom:12px;}
+.bp-lb{font-size:10.5px;font-weight:800;color:var(--ink-3);width:24px;flex:none;padding-top:12px;}
+
+.rating-row{display:grid;grid-template-columns:34px 1fr 54px 46px;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line-soft);}
+.rating-row:last-child{border-bottom:0;}
+.rate-bar{height:6px;border-radius:99px;background:var(--surface-3);overflow:hidden;}
+.rate-fill{height:100%;border-radius:99px;}
+.rate-num{font-size:13px;font-weight:800;font-variant-numeric:tabular-nums;text-align:right;}
+
+.disclaimer{
+  display:flex;gap:10px;align-items:flex-start;font-size:11.5px;color:var(--ink-3);line-height:1.6;
+  background:var(--surface-2);border-radius:var(--r-md);padding:12px 14px;margin-top:16px;
+}
+
+/* ============================================================
+   CHART
+   ============================================================ */
+.chart-wrap{position:relative;}
+svg.chart{display:block;width:100%;height:auto;overflow:visible;}
+.chart-legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--ink-2);font-weight:600;margin-bottom:12px;}
+.chart-legend i{width:11px;height:11px;border-radius:3px;display:inline-block;margin-right:6px;vertical-align:-1px;}
+.tick{fill:var(--ink-3);font-size:10.5px;font-weight:600;font-variant-numeric:tabular-nums;}
+.gridline{stroke:var(--grid);stroke-width:1;}
+.zeroline{stroke:var(--axis);stroke-width:1;}
+.tooltip{
+  position:absolute;pointer-events:none;opacity:0;transition:opacity .12s;
+  background:var(--surface-3);border:1px solid var(--line);border-radius:10px;
+  padding:9px 11px;font-size:12px;box-shadow:var(--shadow);white-space:nowrap;z-index:5;
+}
+.tooltip b{font-size:13px;}
+.tt-row{display:flex;gap:10px;justify-content:space-between;color:var(--ink-2);}
+.tt-row span:last-child{font-variant-numeric:tabular-nums;font-weight:700;color:var(--ink-1);}
+
+.table-toggle{font-size:12px;color:var(--ink-3);font-weight:600;margin-top:12px;}
+.table-toggle:hover{color:var(--accent);}
+.data-table{display:none;margin-top:12px;}
+.data-table.show{display:block;}
+
+/* ============================================================
+   MISC
+   ============================================================ */
+.news-item{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid var(--line-soft);}
+.news-item:last-child{border-bottom:0;}
+.news-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);margin-top:7px;flex:none;}
+.news-h{font-size:13px;font-weight:650;line-height:1.5;}
+.news-m{font-size:11.5px;color:var(--ink-3);margin-top:3px;}
+
+.empty{padding:44px 20px;text-align:center;color:var(--ink-3);font-size:13px;}
+.back-link{font-size:12.5px;color:var(--ink-3);font-weight:600;margin-bottom:12px;display:inline-flex;gap:6px;align-items:center;}
+.back-link:hover{color:var(--accent);}
+
+@media (max-width:960px){
+  .cols-main,.cols-2,.cols-3{grid-template-columns:1fr;}
+  .bp-grid{grid-template-columns:1fr;}
+}
+@media (max-width:640px){
+  .match{grid-template-columns:52px minmax(0,1fr);}
+  .match-actions{grid-column:1/-1;justify-content:flex-end;}
+  .phase{grid-template-columns:1fr;gap:6px;}
+  .ai-summary{font-size:15px;}
+  .focus-box{grid-template-columns:1fr;gap:12px;}
+  .bp-summary{grid-template-columns:1fr;gap:18px;}
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand"><span class="brand-mark">R</span>RIFT<span style="color:var(--accent)">.GG</span></div>
+    <nav class="nav" id="nav">
+      <button data-view="home">홈</button>
+      <button data-view="schedule">일정 · 결과</button>
+      <button data-view="standings">순위</button>
+      <button data-view="teams">팀</button>
+      <button data-view="ai">AI 분석</button>
+    </nav>
+    <div class="topbar-tools">
+      <button class="icon-btn" id="themeBtn" title="라이트/다크 전환" aria-label="테마 전환">◐</button>
+    </div>
+  </div>
+</header>
+
+<main class="shell">
+  <section class="view" id="view-home"></section>
+  <section class="view" id="view-schedule"></section>
+  <section class="view" id="view-standings"></section>
+  <section class="view" id="view-teams"></section>
+  <section class="view" id="view-team"></section>
+  <section class="view" id="view-ai"></section>
+</main>
+<script>
+/* ============================================================
+   RIFT.GG — 프로토타입 샘플 데이터
+   구조는 실제 API 스키마를 염두에 두고 설계했습니다.
+   팀/선수 명단은 2026 LCK 실제 로스터 기준,
+   경기 기록·AI 분석 텍스트는 UI 검증용 샘플입니다.
+   ============================================================ */
+
+const TEAMS = {
+  T1 : {code:"T1",  name:"T1",                 color:"#e2012d", founded:2003, region:"KR"},
+  GEN: {code:"GEN", name:"Gen.G",              color:"#c9a227", founded:2017, region:"KR"},
+  HLE: {code:"HLE", name:"한화생명e스포츠",       color:"#f5811f", founded:2018, region:"KR"},
+  KT : {code:"KT",  name:"KT 롤스터",            color:"#8a1538", founded:2012, region:"KR"},
+  DK : {code:"DK",  name:"Dplus KIA",          color:"#163f6d", founded:2012, region:"KR"},
+  BFX: {code:"BFX", name:"BNK FearX",          color:"#00a79b", founded:2020, region:"KR"},
+  NS : {code:"NS",  name:"농심 레드포스",         color:"#b8272d", founded:2021, region:"KR"},
+  DRX: {code:"DRX", name:"키움 DRX",            color:"#4a90d9", founded:2012, region:"KR"},
+  BRO: {code:"BRO", name:"한진 브리온",          color:"#3d7dbf", founded:2015, region:"KR"},
+  DNS: {code:"DNS", name:"DN 수퍼스",           color:"#2b4de0", founded:2024, region:"KR"},
+  /* 해외 리그 (멀티 리그 확장 데모) */
+  BLG: {code:"BLG", name:"Bilibili Gaming",    color:"#1f5fd6", founded:2017, region:"CN"},
+  TES: {code:"TES", name:"Top Esports",        color:"#c0392b", founded:2017, region:"CN"},
+  G2 : {code:"G2",  name:"G2 Esports",         color:"#e4002b", founded:2015, region:"EU"},
+  FNC: {code:"FNC", name:"Fnatic",             color:"#ff5800", founded:2004, region:"EU"}
+};
+
+const ROSTERS = {
+  T1 : [["TOP","Doran","최현준",3.9],["JGL","Oner","문현준",4.4],["MID","Faker","이상혁",5.1],["BOT","Peyz","김수환",6.2],["SUP","Keria","류민석",5.8]],
+  GEN: [["TOP","Kiin","김기인",4.6],["JGL","Canyon","김건부",5.4],["MID","Chovy","정지훈",7.3],["BOT","Ruler","박재혁",6.0],["SUP","Duro","주민규",4.9]],
+  HLE: [["TOP","Zeus","최우제",4.8],["JGL","Kanavi","서진혁",4.7],["MID","Zeka","김건우",5.6],["BOT","Gumayusi","이민형",6.5],["SUP","Delight","유환중",5.2]],
+  KT : [["TOP","PerfecT","이승민",4.1],["JGL","Cuzz","문우찬",4.3],["MID","Bdd","곽보성",5.2],["BOT","Aiming","김하람",5.9],["SUP","Pollu","이상현",4.4]],
+  DK : [["TOP","Siwoo","전시우",3.7],["JGL","Lucid","최용혁",4.5],["MID","ShowMaker","허수",5.0],["BOT","Smash","이동하",5.3],["SUP","Career","김동환",4.2]],
+  BFX: [["TOP","Clear","송현민",3.8],["JGL","Raptor","서동균",4.0],["MID","VicLa","이대광",4.6],["BOT","Diable","이창석",5.1],["SUP","Kellin","김형규",4.3]],
+  NS : [["TOP","Kingen","황성훈",3.6],["JGL","Sponge","박기훈",3.4],["MID","Calix","김동현",4.2],["BOT","Taeyoon","김태윤",4.5],["SUP","Lehends","손시우",4.1]],
+  DRX: [["TOP","Rich","이재원",3.5],["JGL","Vincenzo","심준승",3.3],["MID","ucal","손우현",4.0],["BOT","Jiwoo","정지우",4.4],["SUP","Andil","문관빈",3.6]],
+  BRO: [["TOP","Casting","이동훈",3.2],["JGL","Gideon","김민상",3.1],["MID","Fisher","김정현",3.8],["BOT","Teddy","박진성",4.6],["SUP","Namgung","남궁현",3.4]],
+  DNS: [["TOP","DuDu","이동주",3.9],["JGL","Pyosik","홍창현",3.7],["MID","Clozer","이주현",4.3],["BOT","deokdam","서대길",4.8],["SUP","Life","김정민",3.9]]
+};
+
+/* 라운드 3-4 그룹 스탠딩 (라운드 1-2 성적 승계) */
+const STANDINGS = {
+  legend: {
+    label:"레전드 그룹", note:"플레이오프 직행권 경쟁 · 상위 팀은 부전승 라운드 확보",
+    rows:[
+      {t:"HLE", w:21, l:5,  sw:46, sl:19, streak:"W4", form:["W","W","W","L","W"]},
+      {t:"GEN", w:20, l:6,  sw:44, sl:22, streak:"W2", form:["W","W","L","W","W"]},
+      {t:"T1",  w:19, l:7,  sw:43, sl:25, streak:"W3", form:["W","W","W","L","W"]},
+      {t:"KT",  w:16, l:10, sw:37, sl:29, streak:"L1", form:["L","W","W","L","W"]},
+      {t:"DK",  w:14, l:12, sw:33, sl:32, streak:"W1", form:["W","L","W","L","L"]}
+    ]
+  },
+  rise: {
+    label:"라이즈 그룹", note:"플레이-인 시드 및 잔류 경쟁",
+    rows:[
+      {t:"BFX", w:13, l:13, sw:31, sl:32, streak:"L2", form:["L","L","W","W","L"]},
+      {t:"NS",  w:11, l:15, sw:27, sl:35, streak:"W1", form:["W","L","L","W","L"]},
+      {t:"DNS", w:9,  l:17, sw:24, sl:38, streak:"L1", form:["L","W","L","L","W"]},
+      {t:"DRX", w:8,  l:18, sw:22, sl:39, streak:"L3", form:["L","L","L","W","L"]},
+      {t:"BRO", w:6,  l:20, sw:18, sl:42, streak:"L1", form:["L","L","W","L","L"]}
+    ]
+  }
+};
+
+/* ---------- 경기 ---------- */
+/* status: live | upcoming | done */
+const MATCHES = [
+  /* 오늘 */
+  {id:"m101", league:"LCK", stage:"라운드 4", date:"2026-07-28", time:"17:00", bo:3,
+   a:"GEN", b:"HLE", sa:1, sb:1, status:"live", liveNote:"3세트 진행 중 · 24분"},
+  {id:"m102", league:"LCK", stage:"라운드 4", date:"2026-07-28", time:"20:00", bo:3,
+   a:"T1", b:"DK", sa:null, sb:null, status:"upcoming"},
+
+  /* 예정 */
+  {id:"m103", league:"LCK", stage:"라운드 4", date:"2026-07-29", time:"17:00", bo:3,
+   a:"KT", b:"BFX", sa:null, sb:null, status:"upcoming"},
+  {id:"m104", league:"LCK", stage:"라운드 4", date:"2026-07-29", time:"20:00", bo:3,
+   a:"DRX", b:"NS", sa:null, sb:null, status:"upcoming"},
+  {id:"m105", league:"LPL", stage:"서머 정규", date:"2026-07-29", time:"18:00", bo:3,
+   a:"BLG", b:"TES", sa:null, sb:null, status:"upcoming"},
+  {id:"m106", league:"LCK", stage:"라운드 4", date:"2026-07-30", time:"17:00", bo:3,
+   a:"BRO", b:"DNS", sa:null, sb:null, status:"upcoming"},
+  {id:"m107", league:"LEC", stage:"서머 정규", date:"2026-07-30", time:"01:00", bo:3,
+   a:"G2", b:"FNC", sa:null, sb:null, status:"upcoming"},
+
+  /* 종료 */
+  {id:"m201", league:"LCK", stage:"라운드 4", date:"2026-07-25", time:"20:00", bo:3,
+   a:"T1", b:"GEN", sa:2, sb:1, status:"done", featured:true},
+  {id:"m202", league:"LCK", stage:"라운드 4", date:"2026-07-24", time:"17:00", bo:3,
+   a:"HLE", b:"KT", sa:2, sb:0, status:"done"},
+  {id:"m203", league:"LCK", stage:"라운드 4", date:"2026-07-23", time:"20:00", bo:3,
+   a:"DK", b:"BFX", sa:2, sb:1, status:"done"},
+  {id:"m204", league:"LCK", stage:"라운드 4", date:"2026-07-21", time:"17:00", bo:3,
+   a:"NS", b:"GEN", sa:0, sb:2, status:"done"},
+  {id:"m205", league:"LCK", stage:"라운드 3", date:"2026-07-19", time:"17:00", bo:3,
+   a:"DNS", b:"DRX", sa:2, sb:1, status:"done", noReport:true},
+  {id:"m206", league:"LPL", stage:"서머 정규", date:"2026-07-22", time:"18:00", bo:3,
+   a:"TES", b:"BLG", sa:1, sb:2, status:"done", noReport:true}
+];
+
+const NEWS = [
+  {h:"한화생명, 라운드 4 4연승… 정규시즌 1위 매직넘버 2", m:"LCK · 2시간 전"},
+  {h:"T1 vs 젠지 3세트, 시즌 최다 동시시청자 기록 경신", m:"LCK · 6시간 전"},
+  {h:"쵸비, 라운드 3-4 구간 KDA 9.1로 전체 1위", m:"기록실 · 1일 전"},
+  {h:"2026 월드 챔피언십 개최지 및 일정 공식 발표", m:"국제대회 · 2일 전"},
+  {h:"한진 브리온, 미드 로머 교체 — 콜업 명단 공개", m:"로스터 · 3일 전"}
+];
+</script>
+<script>
+/* ============================================================
+   AI 분석 리포트 — 시리즈(매치) → 세트(게임) 2단 구조
+   REPORTS[matchId] = { series:{...}, games:[ {set:1, ...}, ... ] }
+   실제 API 연동 시에도 게임 단위(gameId)로 내려오는 데이터를
+   그대로 games[] 에 매핑하면 된다.
+   ============================================================ */
+const REPORTS = {
+
+/* ─────────── T1 2 : 1 Gen.G ─────────── */
+m201: {
+  series:{
+    generated:"2026-07-25 23:05", model:"rift-analyst v2.1", confidence:88, mvp:"Keria",
+    headline:"1세트를 내준 T1이 밴픽을 바꿔 시리즈를 되찾았다.",
+    summary:"1세트는 칼리스타를 1픽으로 가져간 젠지의 봇 주도권에 T1이 손도 쓰지 못한 경기였다. T1은 2세트에서 두 번째 밴으로 곧장 칼리스타를 지웠고, 이후 두 세트 모두 봇 구도를 무력화한 채 상체 교전으로 경기를 풀었다. 3세트 24분 바론 앞 4-1 대승이 시리즈 전체의 분기점.",
+    tags:["밴픽 조정","봇 구도 전환","3세트 역전"],
+    takeaway:"세트가 진행될수록 T1의 밴 우선순위가 <b>상체 → 젠지 봇 듀오</b>로 이동했다. 1세트에서 열어준 칼리스타를 2·3세트 연속으로 지운 것이 시리즈의 실질적 승부처."
+  },
+  games:[
+  {
+    set:1, winner:"GEN", duration:"31:20", confidence:84,
+    headline:"룰러의 칼리스타가 라인전부터 끝까지 T1 봇을 눌렀다.",
+    summary:"젠지가 1번 픽으로 칼리스타를 확보하며 봇 2:2 구도를 선점했다. T1은 8분 이후 봇 라인을 사실상 포기했고, 젠지는 리스크 없는 오브젝트 회수만으로 31분에 경기를 끝냈다.",
+    tags:["봇 완파","무난한 스노우볼"],
+    gold:[[0,0],[3,-180],[6,-540],[9,-1320],[12,-2140],[15,-2880],[18,-3560],[21,-4210],[24,-5480],[27,-6930],[31,-9240]],
+    events:[{m:9,side:"b",label:"봇 2킬"},{m:15,side:"b",label:"드래곤 2스택"},{m:21,side:"b",label:"바론"},{m:27,side:"b",label:"에이스"},{m:31,side:"b",label:"넥서스"}],
+    phases:[
+      {k:"초반", t:"0 – 12분", swing:"GEN +2.1k",
+       body:"칼리스타-라칸 듀오가 2레벨 타이밍부터 밀어붙였다. 9분 라칸의 이니시로 2킬이 나오며 T1 봇은 <b>점멸을 모두 소진</b>했고, 이후 라인을 당겨 받는 것 외에 선택지가 없었다.",
+       tags:["봇 2:2 열세","점멸 소진"]},
+      {k:"중후반", t:"12 – 31분", swing:"GEN +9.2k",
+       body:"젠지는 무리한 진입 없이 <b>드래곤 → 바론 순으로 오브젝트만 회수</b>했다. T1은 반격 각을 만들 만한 이니시 챔피언 자체가 조합에 없었다.",
+       tags:["오브젝트 회수","반격 부재"]}
+    ],
+    moments:[
+      {m:"9:04", h:"라칸 선이니시 — 봇 2킬", d:"라인 푸시 상태에서 들어간 정확한 이니시. 이 시점 이후 T1 봇의 CS 격차가 분당 8개씩 벌어졌다.", swing:"+1.3k", s:"b"},
+      {m:"21:12", h:"무저항 바론", d:"T1이 시야를 잡을 체력조차 없었다. 젠지는 5인 온전한 상태로 시작해 손실 없이 회수.", swing:"+2.0k", s:"b"}
+    ],
+    banpick:{
+      blue:"a",
+      a:{bans:["비에고","오리아나","레나타","마오카이","신드라"],
+         picks:[["세주아니","JGL"],["크산테","TOP"],["아지르","MID"],["제리","BOT"],["알리스타","SUP"]]},
+      b:{bans:["케넨","요네","쓰레쉬","자르반 4세","럼블"],
+         picks:[["칼리스타","BOT"],["잭스","TOP"],["니달리","JGL"],["사일러스","MID"],["라칸","SUP"]]},
+      key:"칼리스타",
+      banFocus:"T1이 비에고·오리아나로 젠지 <b>상체</b>를 먼저 지운 사이, 칼리스타가 1페이즈를 통째로 살아남았다. 젠지는 1번 픽으로 곧장 칼리스타를 확정했고, 이 한 장이 1세트 봇 구도를 결정했다.",
+      note:"T1의 제리는 칼리스타+라칸의 라인전 압박을 받아낼 수 있는 조합이 아니었다. <b>2세트 밴픽이 정확히 이 지점에서 출발한다.</b>"
+    },
+    ratings:[{p:"Ruler",t:"GEN",r:9.2,note:"라인전부터 무결점"},{p:"Duro",t:"GEN",r:8.5,note:"이니시 적중률"},
+             {p:"Chovy",t:"GEN",r:7.9,note:"안정적 로밍"},{p:"Keria",t:"T1",r:5.4,note:"봇 구도 열세"},
+             {p:"Peyz",t:"T1",r:5.0,note:"성장 실패"}],
+    mvp:"Ruler"
+  },
+  {
+    set:2, winner:"T1", duration:"27:45", confidence:86,
+    headline:"칼리스타를 지운 T1이 27분 만에 되갚았다.",
+    summary:"T1은 2번째 밴으로 칼리스타를, 4번째 밴으로 라칸을 지우며 젠지의 봇 2인 조합 자체를 해체했다. 카밀-비에고로 초반 주도권을 사고 신드라·제리로 후반 밸류까지 챙긴, 1세트와 정반대의 설계.",
+    tags:["밴픽 응수","초반 주도권","27분 종료"],
+    gold:[[0,0],[3,240],[6,690],[9,1180],[12,1960],[15,2740],[18,3120],[21,4380],[24,6010],[27,8420]],
+    events:[{m:9,side:"a",label:"미드 갱 2킬"},{m:15,side:"a",label:"전령"},{m:21,side:"a",label:"바론"},{m:24,side:"a",label:"드래곤 소울"},{m:27,side:"a",label:"넥서스"}],
+    phases:[
+      {k:"초반", t:"0 – 12분", swing:"T1 +2.0k",
+       body:"카밀-비에고 조합이 <b>9분 미드 갱에서 2킬</b>을 만들며 시작했다. 젠지는 마오카이로 받아내려 했으나 초반 교전 밸류에서 밀렸다.",
+       tags:["미드 갱","초반 교전 우위"]},
+      {k:"중후반", t:"12 – 27분", swing:"T1 +8.4k",
+       body:"21분 바론 이후 T1은 드래곤 소울까지 연속으로 회수했다. 젠지는 아펠리오스가 성장할 시간을 <b>끝내 벌지 못했다.</b>",
+       tags:["오브젝트 연쇄","스케일링 차단"]}
+    ],
+    moments:[
+      {m:"9:38", h:"카밀 다이브 셋업", d:"페이커의 신드라 스턴 + 카밀 궁 연계. 젠지 미드가 이 시점 이후 라인을 밀지 못했다.", swing:"+1.2k", s:"a"},
+      {m:"21:04", h:"바론 → 소울 연쇄", d:"바론 버프 상태에서 드래곤까지 이어 가져가며 사실상 경기를 종료시켰다.", swing:"+2.6k", s:"a"}
+    ],
+    banpick:{
+      blue:"b",
+      a:{bans:["칼리스타","라칸","니달리","사일러스","리 신"],
+         picks:[["카밀","TOP"],["비에고","JGL"],["제리","BOT"],["신드라","MID"],["레나타","SUP"]]},
+      b:{bans:["케넨","세주아니","알리스타","아지르","자르반 4세"],
+         picks:[["오리아나","MID"],["잭스","TOP"],["마오카이","JGL"],["아펠리오스","BOT"],["쓰레쉬","SUP"]]},
+      key:"칼리스타",
+      banFocus:"1세트 패배 직후 T1이 <b>2번째 밴으로 곧장 칼리스타를 지웠다.</b> 4번째 밴으로 라칸까지 끊으면서 젠지의 봇 2인 조합을 해체했고, 젠지는 아펠리오스를 4번째 픽까지 미룰 수밖에 없었다.",
+      note:"밴 우선순위가 1세트의 '상체 견제'에서 '<b>젠지 봇 듀오 해체</b>'로 완전히 이동했다. 시리즈 전체에서 가장 중요한 조정."
+    },
+    ratings:[{p:"Faker",t:"T1",r:9.0,note:"미드 주도권 회복"},{p:"Oner",t:"T1",r:8.7,note:"초반 동선"},
+             {p:"Doran",t:"T1",r:8.2,note:"카밀 사이드"},{p:"Chovy",t:"GEN",r:6.4,note:"라인전 무난"},
+             {p:"Ruler",t:"GEN",r:5.9,note:"성장 구간 상실"}],
+    mvp:"Faker"
+  },
+  {
+    set:3, winner:"T1", duration:"33:12", confidence:88,
+    headline:"20분까지 3.1k 뒤지던 T1이 바론 앞 한 번의 교전으로 경기를 통째로 뒤집었다.",
+    summary:"젠지는 초중반 라인 스와프와 오브젝트 선점으로 주도권을 완전히 쥐었지만, 24분 바론 앞에서 케리아의 선제 이니시에이팅에 룰러가 잘리며 4-1 대승을 내줬다. T1은 이 한 번의 교전으로 바론과 드래곤 스택을 동시에 회수했고, 이후 젠지는 사이드 라인을 정리할 여유를 끝내 되찾지 못했다.",
+    tags:["역전승","오브젝트 트레이드","33분 단기전"],
+    gold:[[0,0],[1,0],[2,120],[3,-80],[4,-260],[5,-410],[6,-300],[7,-620],[8,-880],[9,-1520],
+          [10,-1680],[11,-1440],[12,-1810],[13,-2180],[14,-2640],[15,-2510],[16,-2380],[17,-2050],[18,-1180],[19,-1420],
+          [20,-1990],[21,-3120],[22,-3340],[23,-3210],[24,-1760],[25,-980],[26,1240],[27,1880],[28,2150],[29,2040],
+          [30,3260],[31,5180],[32,6420],[33,7840]],
+    events:[{m:9,side:"b",label:"봇 다이브 2킬"},{m:14,side:"b",label:"전령 + 1차 포탑"},{m:18,side:"a",label:"룰러 컷"},
+            {m:21,side:"b",label:"3용 확보"},{m:24,side:"a",label:"바론 앞 4-1"},{m:26,side:"a",label:"바론"},
+            {m:30,side:"a",label:"장로 + 에이스"},{m:33,side:"a",label:"넥서스"}],
+    phases:[
+      {k:"초반", t:"0 – 14분", swing:"GEN +2.6k",
+       body:"젠지가 <b>탑-정글 2:2 구도</b>를 먼저 성립시키며 캐년이 상체에 붙을 시간을 벌었다. 9분 봇 다이브에서 듀로의 플래시 이니시가 정확히 들어가 2킬을 만들었고, 이 시점부터 T1은 봇 웨이브 관리를 포기하고 미드로 시야를 몰았다. 14분 전령 + 1차 포탑까지 내주며 격차가 2.6k까지 벌어졌지만, T1은 이 구간에서 <b>킬을 거의 내주지 않고 CS만 밀린</b> 형태라 스노우볼의 기울기 자체는 완만했다.",
+       tags:["라인 스와프","봇 다이브","전령 선취"]},
+      {k:"중반", t:"14 – 24분", swing:"GEN +3.3k → +1.7k",
+       body:"21분 젠지가 3용을 확보하며 <b>드래곤 소울 포인트</b>에 도달, 격차는 3.3k로 최대치를 찍었다. 여기서 젠지의 선택이 갈렸다 — 소울을 확정하러 바론을 포기하는 대신 <b>바론 트라이로 경기를 끝내려 했고</b>, 시야가 완성되지 않은 상태에서 진입한 것이 결정적이었다. T1은 24분 바론 둥지 입구에 페이커의 궁을 먼저 열어두고 대기했다.",
+       tags:["드래곤 소울 포인트","바론 시야 미확보","페이커 이니시 셋업"]},
+      {k:"후반", t:"24 – 33분", swing:"T1 +7.8k",
+       body:"24분 교전에서 케리아가 룰러를 끊어내며 <b>4-1 대승</b>. T1은 바론을 회수했고, 26분 이후 격차가 처음으로 역전됐다. 젠지는 소울을 위해 4용을 시도했지만 T1이 바론 버프를 두른 채 드래곤 둥지에서 다시 한번 3킬을 만들며 <b>소울 자체를 무산</b>시켰다. 30분 장로 + 에이스로 사실상 경기가 끝났고, 33분 넥서스가 파괴됐다.",
+       tags:["역전","소울 저지","장로 에이스"]}
+    ],
+    moments:[
+      {m:"24:06", h:"바론 앞 4-1 대승 — 시리즈의 분기점",
+       d:"케리아의 노틸러스 앵커가 룰러에게 적중, 젠지가 바론을 치던 중이라 반응이 0.8초 늦었다. 이 교전 하나로 골드 격차가 1.4k 좁혀졌고 바론까지 넘어가며 실질 스윙은 6k 이상이었다.", swing:"+6.1k", s:"a"},
+      {m:"21:30", h:"젠지의 3용 — 이득이자 함정",
+       d:"소울 포인트를 만든 판단 자체는 옳았으나, 이후 10분간 젠지는 '소울을 지켜야 한다'는 제약에 묶여 사이드 운영의 자유도를 스스로 줄였다.", swing:"+1.1k", s:"b"},
+      {m:"9:12", h:"듀로의 봇 다이브 셋업",
+       d:"3레벨 타이밍에 캐년이 봇으로 내려오며 만든 다이브. T1 봇 듀오는 점멸을 모두 소진했고 이후 6분간 라인 주도권을 완전히 잃었다.", swing:"+1.6k", s:"b"},
+      {m:"30:44", h:"장로 드래곤 + 에이스",
+       d:"바론 버프 상태에서 장로까지 확보. 젠지는 부활 타이밍 차이로 아무런 저항을 만들지 못했다.", swing:"+3.2k", s:"a"}
+    ],
+    banpick:{
+      blue:"a",
+      a:{bans:["요네","오공","라칸","뽀삐","스몰더"],
+         picks:[["아리","MID"],["케넨","TOP"],["세주아니","JGL"],["제리","BOT"],["노틸러스","SUP"]]},
+      b:{bans:["카밀","리 신","쓰레쉬","그웬","바루스"],
+         picks:[["잭스","TOP"],["비에고","JGL"],["오리아나","MID"],["칼리스타","BOT"],["레나타","SUP"]]},
+      key:"아리",
+      banFocus:"3세트에서도 라칸이 T1의 <b>3번째 밴</b>으로 지워졌다 — 2세트와 동일한 우선순위. 대신 칼리스타를 열어준 것이 이번엔 의도된 선택이었고, T1은 노틸러스·세주아니의 하드 CC로 이를 받아칠 준비를 했다. 그 결과 아리가 1페이즈 끝까지 살아남아 T1의 1번 픽이 됐다.",
+      note:"젠지는 초중반 주도권 조합, T1은 <b>한 번의 대규모 교전</b>에 모든 것을 건 조합이었다. 24분 교전은 조합 상성이 그대로 결과로 나온 장면 — 아리·케넨·세주아니의 논타겟 CC 체인이 칼리스타·오리아나를 동시에 묶었다."
+    },
+    ratings:[{p:"Keria",t:"T1",r:9.4,note:"경기를 뒤집은 이니시"},{p:"Faker",t:"T1",r:8.6,note:"교전 앞 궁 셋업"},
+             {p:"Peyz",t:"T1",r:8.1,note:"후반 딜량 1위"},{p:"Chovy",t:"GEN",r:7.5,note:"라인전 우위 유지"},
+             {p:"Ruler",t:"GEN",r:5.2,note:"24분 포지셔닝 실수"}],
+    mvp:"Keria"
+  }]
+},
+
+/* ─────────── 한화생명 2 : 0 KT ─────────── */
+m202: {
+  series:{
+    generated:"2026-07-24 19:30", model:"rift-analyst v2.1", confidence:85, mvp:"Zeus",
+    headline:"제우스의 탑이 두 세트 내내 KT의 밴픽보다 한 발 앞서 있었다.",
+    summary:"KT는 두 세트 모두 탑 라인을 완전히 지우지 못했다. 1세트에서 크산테를, 2세트에서 레넥톤을 내준 결과 한화생명은 같은 승리 공식을 두 번 반복할 수 있었다 — 카나비의 탑 집중 동선 + 제우스의 사이드 압박.",
+    tags:["2-0 완승","탑 캐리","동일 패턴 반복"],
+    takeaway:"1세트에서 통한 구도를 KT가 2세트 밴픽으로 막지 못한 것이 결정적. <b>같은 카드에 두 번 당한 시리즈.</b>"
+  },
+  games:[
+  {
+    set:1, winner:"HLE", duration:"32:10", confidence:79,
+    headline:"12분까지 밀리던 한화생명이 전령 한 번으로 흐름을 가져왔다.",
+    summary:"KT가 초반 탑 갱으로 앞서 나갔지만, 12분 전령 교전에서 한화생명이 3킬을 만들며 골드가 역전됐다. 이후 크산테-비에고의 진입력이 그대로 살아나며 격차가 벌어졌다.",
+    tags:["중반 역전","전령 교전"],
+    gold:[[0,0],[4,-320],[8,-680],[12,-210],[16,940],[20,2360],[24,3880],[28,5510],[32,8120]],
+    events:[{m:6,side:"b",label:"KT 탑 갱"},{m:12,side:"a",label:"전령 교전 3킬"},{m:20,side:"a",label:"드래곤 3스택"},
+            {m:24,side:"a",label:"바론"},{m:28,side:"a",label:"에이스"},{m:32,side:"a",label:"넥서스"}],
+    phases:[
+      {k:"초반", t:"0 – 12분", swing:"KT +0.7k → 동률",
+       body:"KT가 6분 탑 갱으로 먼저 앞섰지만 이득을 <b>스노우볼로 잇지 못했다.</b> 12분 전령 교전에서 한화생명이 3킬을 챙기며 격차가 소멸.",
+       tags:["초반 열세","전령 교전"]},
+      {k:"중후반", t:"12 – 32분", swing:"HLE +8.1k",
+       body:"크산테의 진입 각이 열리기 시작하자 KT는 <b>한타를 받아줄 수밖에 없는 구도</b>가 됐다. 24분 바론 이후 정리.",
+       tags:["진입력 우위","바론 스노우볼"]}
+    ],
+    moments:[
+      {m:"12:20", h:"전령 앞 3킬", d:"이 교전 전까지 KT가 앞서 있었다. 골드가 뒤집힌 유일한 지점.", swing:"+1.7k", s:"a"},
+      {m:"24:41", h:"바론 확보", d:"크산테 진입 → 알리스타 후속. KT는 앞라인을 뚫지 못했다.", swing:"+2.2k", s:"a"}
+    ],
+    banpick:{
+      blue:"a",
+      a:{bans:["그웬","세주아니","쓰레쉬","빅토르","니달리"],
+         picks:[["아지르","MID"],["크산테","TOP"],["비에고","JGL"],["제리","BOT"],["레나타","SUP"]]},
+      b:{bans:["잭스","아리","라칸","마오카이","칼리스타"],
+         picks:[["레넥톤","TOP"],["자르반 4세","JGL"],["사일러스","MID"],["아펠리오스","BOT"],["알리스타","SUP"]]},
+      key:"크산테",
+      banFocus:"KT가 잭스·아리를 먼저 지웠지만 <b>탑 라인 자체는 열어뒀다.</b> 한화생명은 제우스에게 크산테를 쥐여줬고, 2세트에도 같은 구도가 그대로 반복된다.",
+      note:"KT의 밴 5장 중 탑 챔피언은 잭스 하나뿐이었다. 밴 배분이 <b>봇에 지나치게 치우친</b> 밴픽."
+    },
+    ratings:[{p:"Zeus",t:"HLE",r:8.7,note:"전령 교전 캐리"},{p:"Kanavi",t:"HLE",r:8.3,note:"교전 합류 속도"},
+             {p:"Gumayusi",t:"HLE",r:8.0,note:"후반 딜량"},{p:"Aiming",t:"KT",r:6.6,note:"분전"},
+             {p:"PerfecT",t:"KT",r:5.5,note:"중반 이후 실종"}],
+    mvp:"Zeus"
+  },
+  {
+    set:2, winner:"HLE", duration:"28:47", confidence:82,
+    headline:"제우스의 탑 다이브 한 번이 KT의 스플릿 플랜 전체를 무너뜨렸다.",
+    summary:"한화생명은 1세트부터 이어진 탑 주도권을 2세트에도 그대로 가져갔다. 카나비의 갱킹 루트가 초반 8분간 탑에만 3회 집중되며 퍼펙트를 라인에서 지웠고, KT가 준비한 사이드 스플릿 운영은 시작조차 하지 못했다.",
+    tags:["탑 캐리","완승","28분 단기전"],
+    gold:[[0,0],[1,60],[2,180],[3,340],[4,290],[5,610],[6,980],[7,1120],[8,1840],[9,2010],
+          [10,2260],[11,2180],[12,2740],[13,3010],[14,3390],[15,3120],[16,3680],[17,4210],[18,4050],[19,4620],
+          [20,5340],[21,5180],[22,6020],[23,6810],[24,7240],[25,7960],[26,8830],[27,9410],[28,10620]],
+    events:[{m:4,side:"a",label:"탑 갱 성공"},{m:8,side:"a",label:"탑 다이브 2킬"},{m:14,side:"a",label:"협곡 전령"},
+            {m:20,side:"a",label:"바론"},{m:26,side:"a",label:"에이스"},{m:28,side:"a",label:"넥서스"}],
+    phases:[
+      {k:"초반", t:"0 – 10분", swing:"HLE +2.3k",
+       body:"카나비가 <b>탑에만 3회</b> 관여했다. 4분 갱킹 성공 이후 KT는 정글 시야를 봇으로 몰았지만, 8분 다이브에서 딜라이트까지 합류한 3인 다이브에 퍼펙트가 두 번째로 잡히며 탑 1차가 사실상 무방비 상태가 됐다.",
+       tags:["정글 탑 집중","3인 다이브"]},
+      {k:"중반", t:"10 – 20분", swing:"HLE +5.3k",
+       body:"제우스가 <b>탑 사이드에서 2인 이상을 계속 묶으면서</b>, 한화생명은 나머지 4인으로 오브젝트를 자유롭게 가져갔다. KT는 봇에서 에이밍이 성장을 따라잡으려 했으나 웨이브가 계속 밀려 들어와 안전한 CS 구간이 없었다.",
+       tags:["1-3-1","오브젝트 자유"]},
+      {k:"후반", t:"20 – 28분", swing:"HLE +10.6k",
+       body:"20분 바론 이후 KT는 억제기 앞 수비 외에 선택지가 없었다. 26분 에이스로 정리, 28분 종료.",
+       tags:["바론 스노우볼"]}
+    ],
+    moments:[
+      {m:"8:24", h:"3인 탑 다이브", d:"딜라이트가 봇 웨이브를 버리고 탑으로 로밍. 이 판단이 경기 전체의 방향을 결정했다.", swing:"+1.9k", s:"a"},
+      {m:"20:11", h:"무저항 바론", d:"KT는 시야가 전무해 바론 시작 자체를 인지하지 못했다.", swing:"+2.4k", s:"a"}
+    ],
+    banpick:{
+      blue:"a",
+      a:{bans:["잭스","마오카이","레나타","아펠리오스","럼블"],
+         picks:[["아지르","MID"],["레넥톤","TOP"],["자르반 4세","JGL"],["바루스","BOT"],["알리스타","SUP"]]},
+      b:{bans:["케넨","니달리","노틸러스","아리","오른"],
+         picks:[["그웬","TOP"],["세주아니","JGL"],["빅토르","MID"],["징크스","BOT"],["브라움","SUP"]]},
+      key:"레넥톤",
+      banFocus:"KT가 1세트에 당한 크산테를 이번엔 지웠지만, 한화생명은 <b>레넥톤으로 같은 역할을 대체</b>했다. 반대로 한화생명은 잭스·마오카이를 먼저 지워 KT가 탑에서 버틸 카드를 순차적으로 없앴고, 남은 선택지가 그웬뿐이었다.",
+      note:"KT의 그웬은 <b>후반을 보는 픽</b>이었으나, 레넥톤+자르반의 초반 다이브 조합에 맞서 라인전 단계를 버텨낼 설계가 없었다."
+    },
+    ratings:[{p:"Zeus",t:"HLE",r:9.1,note:"탑 완파"},{p:"Kanavi",t:"HLE",r:8.8,note:"동선 설계"},
+             {p:"Zeka",t:"HLE",r:7.9,note:"안정적 로밍"},{p:"Bdd",t:"KT",r:6.3,note:"홀로 분전"},
+             {p:"PerfecT",t:"KT",r:4.6,note:"초반 3데스"}],
+    mvp:"Zeus"
+  }]
+},
+
+/* ─────────── Dplus KIA 2 : 1 BNK FearX ─────────── */
+m203: {
+  series:{
+    generated:"2026-07-23 23:20", model:"rift-analyst v2.1", confidence:74, mvp:"Smash",
+    headline:"1세트를 내준 DK가 제리를 1번 밴으로 지우며 시리즈를 뒤집었다.",
+    summary:"1세트에서 디아블의 제리에게 완패한 DK는 2·3세트 모두 첫 밴을 제리에 썼다. BFX는 대체 원거리 딜러로 초반 밸류를 만들지 못했고, DK는 두 세트 연속으로 경기를 후반까지 끌고 가 스케일링 차이로 이겼다.",
+    tags:["1패 후 조정","제리 밴","장기전 우위"],
+    takeaway:"DK의 조정은 단순했다 — <b>1번 밴을 상대 에이스 챔피언에 고정.</b> 대신 그만큼 다른 라인의 밴을 포기했고, 3세트가 41분까지 간 이유이기도 하다."
+  },
+  games:[
+  {
+    set:1, winner:"BFX", duration:"29:33", confidence:80,
+    headline:"디아블의 제리가 1픽으로 풀렸고, 그대로 경기를 끝냈다.",
+    summary:"BFX가 1번 픽으로 제리를 확보했다. DK는 칼리스타로 맞섰지만 라인전과 한타 모두에서 밀렸고, 반격 포인트를 만들지 못한 채 29분에 종료됐다.",
+    tags:["봇 캐리","일방적 흐름"],
+    gold:[[0,0],[4,-410],[8,-1180],[12,-2240],[16,-3410],[20,-4620],[24,-6180],[29,-9040]],
+    events:[{m:8,side:"b",label:"봇 3킬"},{m:14,side:"b",label:"드래곤"},{m:20,side:"b",label:"바론"},
+            {m:25,side:"b",label:"에이스"},{m:29,side:"b",label:"넥서스"}],
+    phases:[
+      {k:"초반", t:"0 – 12분", swing:"BFX +2.2k",
+       body:"8분 봇 3킬로 제리가 <b>첫 코어 아이템을 4분 먼저</b> 완성했다. 이 시점 이후 DK는 봇 타워를 지킬 수 없었다.",
+       tags:["봇 3킬","아이템 격차"]},
+      {k:"중후반", t:"12 – 29분", swing:"BFX +9.0k",
+       body:"BFX는 제리를 중심으로 <b>포킹 후 진입</b>을 반복했다. DK는 그웬의 스플릿으로 시간을 벌려 했으나 오브젝트를 하나도 가져오지 못했다.",
+       tags:["포킹 구도","스플릿 실패"]}
+    ],
+    moments:[
+      {m:"8:12", h:"봇 3킬", d:"켈린의 레나타 궁이 DK 봇 듀오를 동시에 묶었다. 경기 전체를 결정한 교전.", swing:"+2.0k", s:"b"},
+      {m:"20:30", h:"바론 확보", d:"제리 사거리 안에서 DK가 콘테스트를 시도조차 하지 못했다.", swing:"+2.1k", s:"b"}
+    ],
+    banpick:{
+      blue:"b",
+      a:{bans:["사일러스","니달리","쓰레쉬","잭스","세주아니"],
+         picks:[["그웬","TOP"],["자르반 4세","JGL"],["신드라","MID"],["칼리스타","BOT"],["알리스타","SUP"]]},
+      b:{bans:["오른","아지르","라칸","마오카이","아펠리오스"],
+         picks:[["제리","BOT"],["케넨","TOP"],["비에고","JGL"],["오리아나","MID"],["레나타","SUP"]]},
+      key:"제리",
+      banFocus:"BFX는 <b>오른·아지르·마오카이</b>로 DK의 후반 스케일링 카드를 먼저 지웠다. DK는 밴 5장을 미드·정글에 분산했고, 그 사이 제리가 1페이즈를 통과해 BFX의 1번 픽이 됐다.",
+      note:"DK의 밴에는 <b>원거리 딜러가 한 장도 없었다.</b> 2·3세트에서 이 부분이 곧장 수정된다."
+    },
+    ratings:[{p:"Diable",t:"BFX",r:9.0,note:"제리 완벽 운용"},{p:"Kellin",t:"BFX",r:8.4,note:"레나타 궁 적중"},
+             {p:"VicLa",t:"BFX",r:7.7,note:"안정적 서포트"},{p:"Smash",t:"DK",r:5.6,note:"라인전 열세"},
+             {p:"Lucid",t:"DK",r:5.3,note:"봇 커버 실패"}],
+    mvp:"Diable"
+  },
+  {
+    set:2, winner:"DK", duration:"34:12", confidence:72,
+    headline:"DK가 1번 밴으로 제리를 지우자 BFX의 봇 설계가 통째로 흔들렸다.",
+    summary:"제리가 사라지자 BFX는 징크스로 대체했지만 초반 밸류가 크게 떨어졌다. DK는 초중반을 균형에 가깝게 버틴 뒤, 20분 바론과 27분 드래곤 소울로 격차를 벌렸다.",
+    tags:["밴픽 수정","후반 스케일링"],
+    gold:[[0,0],[5,180],[10,-320],[15,640],[20,1880],[25,2410],[30,4260],[34,7180]],
+    events:[{m:10,side:"b",label:"봇 2킬"},{m:20,side:"a",label:"바론"},{m:27,side:"a",label:"드래곤 소울"},
+            {m:31,side:"a",label:"에이스"},{m:34,side:"a",label:"넥서스"}],
+    phases:[
+      {k:"초중반", t:"0 – 20분", swing:"±1k 균형",
+       body:"BFX가 10분 봇에서 2킬을 만들었지만 징크스는 <b>제리만큼 그 이득을 굴리지 못했다.</b> DK는 오른-마오카이로 시간을 벌며 20분까지 버텼다.",
+       tags:["균형 구간","대체 픽 한계"]},
+      {k:"후반", t:"20 – 34분", swing:"DK +7.2k",
+       body:"20분 바론 이후 DK가 오브젝트를 연속으로 회수했다. 27분 드래곤 소울 확보 시점에 사실상 승부가 결정.",
+       tags:["바론","드래곤 소울"]}
+    ],
+    moments:[
+      {m:"20:06", h:"DK 바론", d:"BFX가 시야를 잡으러 들어온 순간 라칸이 2인을 묶었다. 이 교전이 균형을 깼다.", swing:"+2.1k", s:"a"},
+      {m:"27:18", h:"드래곤 소울", d:"아펠리오스가 소울 버프까지 두르며 한타 밸류가 완전히 기울었다.", swing:"+1.8k", s:"a"}
+    ],
+    banpick:{
+      blue:"a",
+      a:{bans:["제리","케넨","레나타","비에고","니달리"],
+         picks:[["아지르","MID"],["오른","TOP"],["마오카이","JGL"],["아펠리오스","BOT"],["라칸","SUP"]]},
+      b:{bans:["칼리스타","자르반 4세","알리스타","오리아나","세주아니"],
+         picks:[["잭스","TOP"],["리 신","JGL"],["사일러스","MID"],["징크스","BOT"],["쓰레쉬","SUP"]]},
+      key:"제리",
+      banFocus:"DK가 <b>1번 밴을 곧장 제리에 썼다.</b> 이어 레나타까지 지우며 1세트 BFX 봇 듀오 조합을 통째로 해체했고, BFX는 징크스+쓰레쉬라는 한 단계 느린 조합으로 내려앉았다.",
+      note:"1세트에서 BFX가 지웠던 오른·아지르를 DK가 이번엔 <b>모두 가져갔다.</b> 밴 카드 5장을 봇에 몰아 쓴 대가."
+    },
+    ratings:[{p:"ShowMaker",t:"DK",r:8.6,note:"아지르 한타 캐리"},{p:"Smash",t:"DK",r:8.3,note:"소울 이후 딜링"},
+             {p:"Siwoo",t:"DK",r:7.8,note:"오른 앞라인"},{p:"Diable",t:"BFX",r:6.2,note:"대체 픽 한계"},
+             {p:"Raptor",t:"BFX",r:5.7,note:"후반 시야 공백"}],
+    mvp:"ShowMaker"
+  },
+  {
+    set:3, winner:"DK", duration:"41:05", confidence:71,
+    headline:"41분 장기전, 승부는 바론이 아니라 다섯 번째 드래곤에서 갈렸다.",
+    summary:"양 팀 모두 바론을 한 차례씩 가져갔지만 결정적인 이득으로 이어지지 않았다. DK는 후반 내내 격차를 2k 이내로 유지하며 버텼고, 38분 장로 드래곤 교전에서 스매쉬가 홀로 3킬을 만들며 경기를 끝냈다.",
+    tags:["장기전","시소 게임","장로 한타"],
+    gold:[[0,0],[2,-140],[4,-380],[6,-620],[8,-1140],[10,-1560],[12,-980],[14,-1420],[16,-2010],[18,-1680],
+          [20,-820],[22,-1240],[24,-460],[26,120],[28,-540],[30,-1180],[32,-320],[34,410],[36,-260],[38,2840],[41,6120]],
+    events:[{m:10,side:"b",label:"BFX 3연킬"},{m:16,side:"b",label:"바론"},{m:26,side:"a",label:"DK 바론"},
+            {m:38,side:"a",label:"장로 3킬"},{m:41,side:"a",label:"넥서스"}],
+    phases:[
+      {k:"초반", t:"0 – 16분", swing:"BFX +2.0k",
+       body:"BFX가 <b>봇 2:2 구도</b>에서 우위를 잡았다. 디아블-켈린 듀오가 라인전 CS 20개 이상 앞섰고, 랩터의 봇 갱까지 겹치며 10분에 3연킬이 나왔다.",
+       tags:["봇 우위","정글 봇 집중"]},
+      {k:"중반", t:"16 – 34분", swing:"±2k 내 시소",
+       body:"BFX가 16분 바론을 가져갔음에도 <b>공성을 끝까지 밀어붙이지 못했다.</b> DK는 쇼메이커의 웨이브 클리어와 커리어의 시야 장악으로 시간을 벌었고, 26분 역바론으로 처음 균형을 맞췄다. 이 구간의 골드 격차는 한 번도 2k를 넘지 않았다.",
+       tags:["바론 트레이드","공성 실패","시야 싸움"]},
+      {k:"후반", t:"34 – 41분", swing:"DK +6.1k",
+       body:"38분 장로 교전에서 <b>스매쉬가 3킬</b>. BFX가 앞라인부터 진입했으나 루시드의 궁이 후속 진입을 차단하며 각개격파 형태가 됐다.",
+       tags:["장로 한타","각개격파"]}
+    ],
+    moments:[
+      {m:"16:40", h:"BFX 바론 — 그러나 공성 무산", d:"바론 버프 3분 중 실제 공성에 쓴 시간은 50초. 이득을 현금화하지 못한 것이 결과적으로 패인이 됐다.", swing:"+1.8k", s:"b"},
+      {m:"38:12", h:"장로 드래곤 앞 3킬", d:"스매쉬가 사이드에서 진입해 후열을 정리. 이 시점 격차가 처음으로 3k를 넘었다.", swing:"+3.4k", s:"a"}
+    ],
+    banpick:{
+      blue:"b",
+      a:{bans:["제리","비에고","쓰레쉬","요네","럼블"],
+         picks:[["오른","TOP"],["마오카이","JGL"],["아지르","MID"],["아펠리오스","BOT"],["라칸","SUP"]]},
+      b:{bans:["오공","세주아니","알리스타","잭스","자르반 4세"],
+         picks:[["사일러스","MID"],["케넨","TOP"],["니달리","JGL"],["칼리스타","BOT"],["레나타","SUP"]]},
+      key:"아펠리오스",
+      banFocus:"DK가 <b>3세트에도 1번 밴을 제리에 고정</b>했다. BFX는 초반 갱킹 정글(오공·세주아니)을 먼저 지워 서로 다른 시간대를 노린 밴이 됐고 — BFX는 20분, DK는 35분 이후를 보고 지웠다. 결과적으로 DK의 밴이 더 늦게 효력을 발휘했다.",
+      note:"DK는 <b>후반 스케일링</b>에 확실히 무게를 뒀다. 40분대 아펠리오스+오른 조합의 한타 밸류가 그대로 발현된 경기."
+    },
+    ratings:[{p:"Smash",t:"DK",r:8.9,note:"장로 한타 3킬"},{p:"Lucid",t:"DK",r:8.2,note:"결정적 궁 각"},
+             {p:"ShowMaker",t:"DK",r:7.6,note:"수비 웨이브 처리"},{p:"Diable",t:"BFX",r:7.4,note:"라인전 우위"},
+             {p:"Raptor",t:"BFX",r:5.8,note:"후반 시야 공백"}],
+    mvp:"Smash"
+  }]
+},
+
+/* ─────────── 농심 0 : 2 Gen.G ─────────── */
+m204: {
+  series:{
+    generated:"2026-07-21 19:20", model:"rift-analyst v2.1", confidence:89, mvp:"Chovy",
+    headline:"두 세트 모두 아지르를 열어둔 농심의 밴픽이 그대로 대가로 돌아왔다.",
+    summary:"농심은 1세트에서 오리아나를, 2세트에서도 오리아나를 1번 밴에 썼지만 정작 쵸비가 두 세트 연속으로 아지르를 가져갔다. 젠지는 미드 주도권을 기반으로 24분·26분 만에 두 세트를 모두 끝냈다.",
+    tags:["2-0 완승","미드 캐리","밴 미스"],
+    takeaway:"1세트에서 아지르에 당한 뒤에도 <b>2세트 밴 5장 중 아지르가 없었다.</b> 시리즈 전체가 이 한 가지 판단에서 결정됐다."
+  },
+  games:[
+  {
+    set:1, winner:"GEN", duration:"24:18", confidence:87,
+    headline:"쵸비의 아지르가 1픽으로 풀린 시점에 사실상 결정된 경기.",
+    summary:"젠지가 1번 픽으로 아지르를 확보했다. 5분 미드 갱을 시작으로 농심 미드가 라인에서 지워졌고, 젠지는 24분 만에 경기를 끝냈다.",
+    tags:["미드 캐리","24분 종료"],
+    gold:[[0,0],[3,-290],[6,-880],[9,-1640],[12,-2910],[15,-4020],[18,-5480],[21,-7160],[24,-9530]],
+    events:[{m:6,side:"b",label:"미드 갱 2킬"},{m:12,side:"b",label:"전령 + 포탑"},{m:17,side:"b",label:"바론"},
+            {m:21,side:"b",label:"에이스"},{m:24,side:"b",label:"넥서스"}],
+    phases:[
+      {k:"초반", t:"0 – 12분", swing:"GEN +2.9k",
+       body:"6분 미드 갱으로 2킬. 아지르가 <b>10분 전에 코어 아이템을 완성</b>하며 라인 주도권이 일방적으로 기울었다.",
+       tags:["미드 갱","아이템 선점"]},
+      {k:"중후반", t:"12 – 24분", swing:"GEN +9.5k",
+       body:"농심은 오브젝트를 한 번도 콘테스트하지 못했다. 17분 바론 이후 정리 수순.",
+       tags:["무저항 오브젝트","조기 종료"]}
+    ],
+    moments:[
+      {m:"6:12", h:"미드 갱 2킬", d:"마오카이 합류 타이밍이 정확했다. 이 시점 이후 농심 미드는 라인을 밀지 못했다.", swing:"+1.1k", s:"b"},
+      {m:"17:22", h:"바론", d:"농심은 시야도 체력도 없었다. 무저항 확보.", swing:"+2.3k", s:"b"}
+    ],
+    banpick:{
+      blue:"b",
+      a:{bans:["오리아나","비에고","쓰레쉬","요네","아펠리오스"],
+         picks:[["크산테","TOP"],["리 신","JGL"],["사일러스","MID"],["징크스","BOT"],["브라움","SUP"]]},
+      b:{bans:["케넨","세주아니","알리스타","제리","니달리"],
+         picks:[["아지르","MID"],["잭스","TOP"],["마오카이","JGL"],["칼리스타","BOT"],["라칸","SUP"]]},
+      key:"아지르",
+      banFocus:"농심이 <b>오리아나를 1번 밴</b>으로 지웠지만 쵸비의 미드 폭이 그보다 넓었다. 아지르를 열어둔 채 1페이즈를 마쳤고, 젠지는 1번 픽으로 아지르를 곧장 확보했다. 우선 밴을 한 챔피언에만 쓴 것이 그대로 대가로 돌아온 밴픽.",
+      note:"농심의 사일러스는 <b>아지르 상대로 라인전에서 이길 수 없는 픽</b>이었고, 그 리스크를 감수할 정글 지원도 준비되지 않았다."
+    },
+    ratings:[{p:"Chovy",t:"GEN",r:9.3,note:"아지르 완벽 운용"},{p:"Kiin",t:"GEN",r:8.5,note:"탑 압박"},
+             {p:"Ruler",t:"GEN",r:8.0,note:"안정적 딜링"},{p:"Calix",t:"NS",r:4.8,note:"라인전 열세"},
+             {p:"Kingen",t:"NS",r:4.6,note:"사이드 붕괴"}],
+    mvp:"Chovy"
+  },
+  {
+    set:2, winner:"GEN", duration:"26:33", confidence:90,
+    headline:"같은 밴, 같은 픽, 같은 결과 — 쵸비의 아지르가 또 나왔다.",
+    summary:"농심은 2세트에서도 오리아나를 지웠고, 젠지는 또 한 번 아지르를 1번 픽으로 가져갔다. 6분 솔로킬로 미드가 열린 뒤 12분 미드 1차 철거, 26분 종료.",
+    tags:["완승","미드 캐리","26분 종료"],
+    gold:[[0,0],[2,-210],[4,-480],[6,-720],[8,-1290],[10,-1740],[12,-2680],[14,-3120],[16,-3980],[18,-4610],
+          [20,-5720],[22,-6480],[24,-7910],[26,-9840]],
+    events:[{m:6,side:"b",label:"미드 솔로킬"},{m:12,side:"b",label:"미드 1차"},{m:18,side:"b",label:"바론"},
+            {m:24,side:"b",label:"에이스"},{m:26,side:"b",label:"넥서스"}],
+    phases:[
+      {k:"초반", t:"0 – 12분", swing:"GEN +2.7k",
+       body:"6분 쵸비의 <b>솔로킬</b>로 미드가 열렸다. 이후 캐년이 미드 인근에 상주하며 농심 정글 진입로를 완전히 차단했다.",
+       tags:["솔로킬","정글 동선 차단"]},
+      {k:"중반", t:"12 – 20분", swing:"GEN +5.7k",
+       body:"미드 1차 철거 이후 젠지는 <b>양 사이드 시야를 자유롭게 잡았고</b>, 농심은 오브젝트 콘테스트를 한 번도 시도하지 못했다.",
+       tags:["맵 장악","무저항 오브젝트"]},
+      {k:"후반", t:"20 – 26분", swing:"GEN +9.8k",
+       body:"24분 에이스 이후 정리. 농심은 억제기 앞 한타 외에 선택지가 없었다.",
+       tags:["빠른 종료"]}
+    ],
+    moments:[
+      {m:"6:18", h:"쵸비 솔로킬", d:"칼릭스가 라인을 당기려던 타이밍에 정확히 들어간 올인. 이 한 장면이 경기 전체의 톤을 결정했다.", swing:"+0.9k", s:"b"},
+      {m:"12:02", h:"미드 1차 철거", d:"12분 미드 1차는 이 패치 기준 상위 5% 속도. 이후 맵 컨트롤이 일방적으로 기울었다.", swing:"+1.4k", s:"b"}
+    ],
+    banpick:{
+      blue:"b",
+      a:{bans:["오리아나","마오카이","쓰레쉬","니달리","아펠리오스"],
+         picks:[["케넨","TOP"],["세주아니","JGL"],["사일러스","MID"],["제리","BOT"],["브라움","SUP"]]},
+      b:{bans:["요네","리 신","레나타","갈리오","바루스"],
+         picks:[["아지르","MID"],["잭스","TOP"],["비에고","JGL"],["징크스","BOT"],["노틸러스","SUP"]]},
+      key:"아지르",
+      banFocus:"1세트에 아지르에게 완패하고도 <b>2세트 밴 5장 중 아지르가 없었다.</b> 농심은 또 오리아나를 1번 밴에 썼고, 젠지는 또 아지르를 1번 픽으로 가져갔다. 시리즈 전체에서 가장 값비싼 판단.",
+      note:"농심은 두 세트 모두 사일러스를 미드로 냈다. <b>같은 매치업을 두 번 반복한</b> 밴픽."
+    },
+    ratings:[{p:"Chovy",t:"GEN",r:9.6,note:"솔로킬 + 무데스"},{p:"Canyon",t:"GEN",r:8.4,note:"미드 상주 동선"},
+             {p:"Ruler",t:"GEN",r:7.8,note:"안정적 딜링"},{p:"Calix",t:"NS",r:4.9,note:"라인전 열세"},
+             {p:"Sponge",t:"NS",r:4.5,note:"동선 실패"}],
+    mvp:"Chovy"
+  }]
+}
+};
+</script>
+<script>
+/* ============================================================
+   RIFT.GG — 앱 로직
+   ============================================================ */
+const $  = (s,r=document)=>r.querySelector(s);
+const $$ = (s,r=document)=>[...r.querySelectorAll(s)];
+const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+const T = c => TEAMS[c] || {code:c,name:c,color:"#888"};
+const badge = (c,size="") =>
+  `<span class="badge ${size}" style="background:${T(c).color}">${esc(c)}</span>`;
+
+const DOW = ["일","월","화","수","목","금","토"];
+const fmtDate = d => {
+  const [y,m,dd] = d.split("-").map(Number);
+  const dt = new Date(Date.UTC(y,m-1,dd));
+  return `${m}월 ${dd}일 (${DOW[dt.getUTCDay()]})`;
+};
+const TODAY = "2026-07-28";
+const dayName = d => d===TODAY ? `오늘 · ${fmtDate(d)}` : fmtDate(d);
+
+let state = { view:"home", team:null, report:"m201", set:-1, schedLeague:"ALL", schedTab:"upcoming" };
+
+/* ============================================================
+   ROUTER
+   ============================================================ */
+function go(view, arg, set){
+  state.view = view;
+  if(view==="team")  state.team = arg;
+  if(view==="ai" && arg){
+    if(arg!==state.report) state.set = -1;      /* 다른 매치로 이동하면 시리즈 종합부터 */
+    state.report = arg;
+    if(set!==undefined) state.set = set;
+  }
+  render();
+  window.scrollTo({top:0,behavior:"instant"});
+}
+function goSet(i){ state.set = i; render(); window.scrollTo({top:0,behavior:"instant"}); }
+function render(){
+  $$(".view").forEach(v=>v.classList.remove("is-active"));
+  const navKey = state.view==="team" ? "teams" : state.view;
+  $$("#nav button").forEach(b=>b.toggleAttribute("aria-current", b.dataset.view===navKey));
+  $$("#nav button").forEach(b=>{ if(b.dataset.view===navKey) b.setAttribute("aria-current","page"); else b.removeAttribute("aria-current"); });
+  const host = $("#view-"+state.view);
+  host.classList.add("is-active");
+  ({home:renderHome,schedule:renderSchedule,standings:renderStandings,
+    teams:renderTeams,team:renderTeam,ai:renderAI})[state.view](host);
+}
+
+/* ============================================================
+   SHARED PARTS
+   ============================================================ */
+function matchRow(m,{compact=false}={}){
+  const done = m.status==="done", live = m.status==="live";
+  const aWin = done && m.sa>m.sb, bWin = done && m.sb>m.sa;
+  const scoreA = m.sa===null ? "" : m.sa, scoreB = m.sb===null ? "" : m.sb;
+  const time = live
+    ? `<b style="color:#ff5757">LIVE</b><span style="font-size:11px">${esc(m.liveNote||"")}</span>`
+    : `<b>${esc(m.time)}</b>${compact?"":`<span>${esc(m.league)}</span>`}`;
+  const hasReport = !!REPORTS[m.id];
+  const action = hasReport
+    ? `<button class="btn-ai" onclick="go('ai','${m.id}')">✦ AI 리포트</button>`
+    : (live ? `<span class="tag tag-live"><i class="dot-live"></i>실시간</span>`
+            : `<span class="tag">${esc(m.stage)}</span>`);
+  return `<article class="match">
+    <div class="match-time">${time}</div>
+    <div class="match-teams">
+      <div class="mt-row ${bWin?'lose':''}">${badge(m.a)}<span class="mt-name">${esc(T(m.a).name)}</span><span class="mt-score num">${scoreA}</span></div>
+      <div class="mt-row ${aWin?'lose':''}">${badge(m.b)}<span class="mt-name">${esc(T(m.b).name)}</span><span class="mt-score num">${scoreB}</span></div>
+    </div>
+    <div class="match-actions">${action}</div>
+  </article>`;
+}
+
+function groupByDate(list){
+  const map = new Map();
+  list.forEach(m=>{ if(!map.has(m.date)) map.set(m.date,[]); map.get(m.date).push(m); });
+  return [...map.entries()];
+}
+
+/* ============================================================
+   HOME
+   ============================================================ */
+function renderHome(host){
+  const today = MATCHES.filter(m=>m.date===TODAY);
+  const recent = MATCHES.filter(m=>m.status==="done").slice(0,4);
+  const featM = MATCHES.find(m=>m.featured);
+  const featR = REPORTS[featM.id], feat = featR.series;
+
+  host.innerHTML = `
+  <div class="page-head">
+    <div>
+      <h1 class="page-title">오늘의 리그</h1>
+      <p class="page-sub">2026 LCK 라운드 4 · ${fmtDate(TODAY)} 기준</p>
+    </div>
+    <span class="tag">프로토타입 — 표시되는 경기 기록은 샘플 데이터입니다</span>
+  </div>
+
+  <div class="grid cols-main">
+    <div class="grid" style="gap:16px">
+      <section class="card">
+        <div class="card-head"><h3 class="card-title">오늘 경기</h3>
+          <button class="card-link" onclick="go('schedule')">전체 일정 →</button></div>
+        <div class="card-body">${today.map(m=>matchRow(m)).join("") || `<div class="empty">오늘 예정된 경기가 없습니다</div>`}</div>
+      </section>
+
+      <section class="card">
+        <div class="card-head">
+          <h3 class="card-title">AI 경기 분석 <span class="tag tag-ai" style="margin-left:6px">✦ 핵심 기능</span></h3>
+          <button class="card-link" onclick="go('ai','${featM.id}')">리포트 열기 →</button>
+        </div>
+        <div class="card-body">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap">
+            ${badge(featM.a,'lg')}<span style="font-weight:800;font-size:16px">${esc(T(featM.a).name)}</span>
+            <span class="num" style="font-weight:900;font-size:20px">${featM.sa} : ${featM.sb}</span>
+            <span style="font-weight:800;font-size:16px;color:var(--ink-3)">${esc(T(featM.b).name)}</span>${badge(featM.b,'lg')}
+            <span class="tag" style="margin-left:auto">BO${featM.bo} · ${featR.games.length}세트</span>
+          </div>
+          <p style="font-size:15px;line-height:1.6;font-weight:600;border-left:3px solid var(--violet);padding-left:14px;margin:0">
+            ${feat.headline}</p>
+          <div class="chip-row" style="margin-top:14px">
+            ${featR.games.map((g,i)=>`<button class="chip" onclick="go('ai','${featM.id}',${i})">
+              ${g.set}세트 · ${esc(g.winner)} 승</button>`).join("")}
+          </div>
+          <div class="ai-meta">
+            ${feat.tags.map(t=>`<span class="tag">#${esc(t)}</span>`).join("")}
+            <div class="conf" style="margin-left:auto">시리즈 신뢰도
+              <div class="conf-track"><div class="conf-fill" style="width:${feat.confidence}%"></div></div>
+              <span class="num">${feat.confidence}%</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><h3 class="card-title">최근 결과</h3>
+          <button class="card-link" onclick="go('schedule')">더 보기 →</button></div>
+        <div class="card-body">${recent.map(m=>matchRow(m,{compact:true})).join("")}</div>
+      </section>
+    </div>
+
+    <div class="grid" style="gap:16px">
+      <section class="card">
+        <div class="card-head"><h3 class="card-title">LCK 레전드 그룹</h3>
+          <button class="card-link" onclick="go('standings')">순위표 →</button></div>
+        <div class="card-body" style="padding:8px 12px 12px">
+          <table><tbody>
+          ${STANDINGS.legend.rows.map((r,i)=>`<tr style="cursor:pointer" onclick="go('team','${r.t}')">
+            <td class="rank ${i<3?'q':''}" style="padding-left:4px">${i+1}</td>
+            <td><div class="team-cell">${badge(r.t,'sm')}<span style="font-size:12.5px">${esc(T(r.t).name)}</span></div></td>
+            <td class="t-right num" style="font-weight:700;padding-right:4px">${r.w}-${r.l}</td>
+          </tr>`).join("")}
+          </tbody></table>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><h3 class="card-title">소식</h3></div>
+        <div class="card-body" style="padding:6px 16px 12px">
+          ${NEWS.map(n=>`<div class="news-item"><span class="news-dot"></span>
+            <div><div class="news-h">${esc(n.h)}</div><div class="news-m">${esc(n.m)}</div></div></div>`).join("")}
+        </div>
+      </section>
+    </div>
+  </div>`;
+}
+
+/* ============================================================
+   SCHEDULE
+   ============================================================ */
+function renderSchedule(host){
+  const leagues = ["ALL","LCK","LPL","LEC"];
+  const tabs = [["upcoming","예정"],["done","결과"]];
+  const list = MATCHES
+    .filter(m=> state.schedLeague==="ALL" || m.league===state.schedLeague)
+    .filter(m=> state.schedTab==="upcoming" ? m.status!=="done" : m.status==="done")
+    .sort((a,b)=> state.schedTab==="upcoming"
+        ? (a.date+a.time).localeCompare(b.date+b.time)
+        : (b.date+b.time).localeCompare(a.date+a.time));
+
+  host.innerHTML = `
+  <div class="page-head">
+    <div><h1 class="page-title">일정 · 결과</h1>
+      <p class="page-sub">리그별 경기 일정과 종료된 경기의 AI 리포트</p></div>
+    <div class="seg">${tabs.map(([k,l])=>`<button aria-pressed="${state.schedTab===k}" onclick="state.schedTab='${k}';render()">${l}</button>`).join("")}</div>
+  </div>
+  <div class="chip-row" style="margin-bottom:8px">
+    ${leagues.map(l=>`<button class="chip" aria-pressed="${state.schedLeague===l}" onclick="state.schedLeague='${l}';render()">${l==="ALL"?"전체":l}</button>`).join("")}
+  </div>
+  ${groupByDate(list).map(([d,ms])=>`
+    <div class="day-label">${dayName(d)}</div>
+    ${ms.map(m=>matchRow(m)).join("")}`).join("") || `<div class="empty">조건에 맞는 경기가 없습니다</div>`}`;
+}
+
+/* ============================================================
+   STANDINGS
+   ============================================================ */
+function standingsTable(g, qualCount){
+  return `<div class="table-wrap"><table>
+    <thead><tr>
+      <th style="width:34px">#</th><th>팀</th>
+      <th class="t-right">전적</th><th class="t-right">승률</th>
+      <th class="t-right">세트</th><th class="t-right">득실</th>
+      <th class="t-center">연속</th><th class="t-center">최근 5경기</th>
+    </tr></thead><tbody>
+    ${g.rows.map((r,i)=>{
+      const wr = Math.round(r.w/(r.w+r.l)*100);
+      const diff = r.sw-r.sl;
+      return `<tr style="cursor:pointer" onclick="go('team','${r.t}')">
+        <td class="rank ${i<qualCount?'q':''}">${i+1}</td>
+        <td><div class="team-cell">${badge(r.t)}<span>${esc(T(r.t).name)}</span></div></td>
+        <td class="t-right num" style="font-weight:700">${r.w}-${r.l}</td>
+        <td class="t-right num muted">${wr}%</td>
+        <td class="t-right num muted">${r.sw}-${r.sl}</td>
+        <td class="t-right num ${diff>=0?'diff-pos':'diff-neg'}" style="font-weight:700">${diff>0?"+":""}${diff}</td>
+        <td class="t-center num muted">${esc(r.streak)}</td>
+        <td class="t-center"><div class="pill-row" style="justify-content:center">
+          ${r.form.map(f=>`<span class="pill ${f.toLowerCase()}">${f}</span>`).join("")}</div></td>
+      </tr>`;}).join("")}
+    </tbody></table></div>`;
+}
+function renderStandings(host){
+  host.innerHTML = `
+  <div class="page-head">
+    <div><h1 class="page-title">2026 LCK 순위</h1>
+      <p class="page-sub">라운드 3-4 · 라운드 1-2 성적 승계 · ${fmtDate(TODAY)} 기준</p></div>
+  </div>
+  <div class="grid" style="gap:16px">
+    <section class="card">
+      <div class="card-head"><div>
+        <h3 class="card-title">${STANDINGS.legend.label}</h3>
+        <div class="page-sub" style="margin-top:1px">${STANDINGS.legend.note}</div></div></div>
+      <div class="card-body">${standingsTable(STANDINGS.legend,3)}
+        <div class="qual-note">
+          <span><i class="qual-key" style="background:var(--accent)"></i>플레이오프 상위 시드</span>
+          <span><i class="qual-key" style="background:var(--ink-3)"></i>플레이-인</span>
+        </div>
+      </div>
+    </section>
+    <section class="card">
+      <div class="card-head"><div>
+        <h3 class="card-title">${STANDINGS.rise.label}</h3>
+        <div class="page-sub" style="margin-top:1px">${STANDINGS.rise.note}</div></div></div>
+      <div class="card-body">${standingsTable(STANDINGS.rise,2)}</div>
+    </section>
+  </div>`;
+}
+
+/* ============================================================
+   TEAMS
+   ============================================================ */
+function teamRecord(code){
+  for(const g of [STANDINGS.legend,STANDINGS.rise]){
+    const i = g.rows.findIndex(r=>r.t===code);
+    if(i>=0) return {...g.rows[i], rank:i+1, group:g.label};
+  }
+  return null;
+}
+function renderTeams(host){
+  const codes = Object.keys(ROSTERS);
+  host.innerHTML = `
+  <div class="page-head">
+    <div><h1 class="page-title">팀</h1><p class="page-sub">2026 LCK 10개 팀 · 클릭하면 로스터와 전적을 볼 수 있습니다</p></div>
+  </div>
+  <div class="team-grid">
+    ${codes.map(c=>{
+      const r = teamRecord(c);
+      return `<article class="team-card" style="--tc:${T(c).color}" onclick="go('team','${c}')">
+        <div style="display:flex;align-items:center;gap:10px">${badge(c,'lg')}
+          <div><h4>${esc(T(c).name)}</h4><div class="page-sub" style="margin:0">${esc(r.group)} ${r.rank}위</div></div></div>
+        <div class="team-meta"><span>전적</span><b class="num" style="color:var(--ink-1)">${r.w}-${r.l}</b></div>
+        <div class="pill-row">${r.form.map(f=>`<span class="pill ${f.toLowerCase()}">${f}</span>`).join("")}</div>
+      </article>`;}).join("")}
+  </div>`;
+}
+
+function renderTeam(host){
+  const c = state.team, r = teamRecord(c), roster = ROSTERS[c];
+  const games = MATCHES.filter(m=>(m.a===c||m.b===c));
+  const wr = Math.round(r.w/(r.w+r.l)*100);
+  const avgKda = (roster.reduce((s,p)=>s+p[3],0)/roster.length).toFixed(1);
+  host.innerHTML = `
+  <button class="back-link" onclick="go('teams')">← 팀 목록</button>
+  <div class="card" style="padding:22px;margin-bottom:16px;background:
+      linear-gradient(120deg,${T(c).color}22,transparent 55%),var(--surface-1)">
+    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+      ${badge(c,'xl')}
+      <div style="flex:1;min-width:180px">
+        <h1 class="page-title">${esc(T(c).name)}</h1>
+        <p class="page-sub">${esc(r.group)} ${r.rank}위 · 창단 ${T(c).founded}년 · LCK</p>
+      </div>
+      <div class="pill-row">${r.form.map(f=>`<span class="pill ${f.toLowerCase()}">${f}</span>`).join("")}</div>
+    </div>
+  </div>
+
+  <div class="grid cols-3" style="margin-bottom:16px">
+    <div class="stat-tile"><div class="stat-label">시즌 전적</div>
+      <div class="stat-value num">${r.w}-${r.l}</div><div class="stat-delta muted">승률 ${wr}%</div></div>
+    <div class="stat-tile"><div class="stat-label">세트 득실</div>
+      <div class="stat-value num">${r.sw-r.sl>0?"+":""}${r.sw-r.sl}</div><div class="stat-delta muted">${r.sw}승 ${r.sl}패</div></div>
+    <div class="stat-tile"><div class="stat-label">팀 평균 KDA</div>
+      <div class="stat-value num">${avgKda}</div><div class="stat-delta muted">주전 5인 기준</div></div>
+  </div>
+
+  <div class="grid cols-2">
+    <section class="card">
+      <div class="card-head"><h3 class="card-title">로스터</h3><span class="card-link">라운드 3-4 KDA</span></div>
+      <div class="card-body"><div class="roster">
+        ${roster.map(([pos,nick,real,kda])=>`<div class="roster-row">
+          <div class="pos">${pos}</div>
+          <div><div class="pl-name">${esc(nick)}</div><div class="pl-real">${esc(real)}</div></div>
+          <div class="kda">${kda.toFixed(1)}</div></div>`).join("")}
+      </div></div>
+    </section>
+    <section class="card">
+      <div class="card-head"><h3 class="card-title">경기 기록</h3></div>
+      <div class="card-body">${games.map(m=>matchRow(m,{compact:true})).join("")}</div>
+    </section>
+  </div>`;
+}
+
+/* ============================================================
+   AI REPORT  — 핵심 기능
+   ============================================================ */
+function renderAI(host){
+  const ids = Object.keys(REPORTS);
+  const id  = REPORTS[state.report] ? state.report : ids[0];
+  const m   = MATCHES.find(x=>x.id===id), R = REPORTS[id];
+  const S   = R.series, games = R.games;
+  const gi  = (state.set>=0 && state.set<games.length) ? state.set : -1;  /* -1 = 시리즈 종합 */
+  const winA = m.sa > m.sb;
+
+  const head = `
+  <div class="page-head">
+    <div><h1 class="page-title">AI 경기 분석</h1>
+      <p class="page-sub">시리즈 총평과 세트별 리포트를 분리해서 제공합니다</p></div>
+    <div class="chip-row">
+      ${ids.map(x=>{const mm=MATCHES.find(y=>y.id===x);
+        return `<button class="chip" aria-pressed="${x===id}" onclick="go('ai','${x}')">${esc(mm.a)} vs ${esc(mm.b)}</button>`;}).join("")}
+    </div>
+  </div>
+
+  <div class="ai-hero">
+    <div class="ai-vs">
+      <div class="ai-side">${badge(m.a,'lg')}
+        <div><div class="nm" style="${winA?'':'color:var(--ink-3)'}">${esc(T(m.a).name)}</div>
+          <div class="sub">${winA?"승":"패"}</div></div></div>
+      <div class="ai-score"><span class="${winA?'':'l'}">${m.sa}</span> : <span class="${winA?'l':''}">${m.sb}</span></div>
+      <div class="ai-side"><div style="text-align:right">
+        <div class="nm" style="${winA?'color:var(--ink-3)':''}">${esc(T(m.b).name)}</div>
+        <div class="sub">${winA?"패":"승"}</div></div>${badge(m.b,'lg')}</div>
+      <div style="margin-left:auto;text-align:right">
+        <div class="tag">${esc(m.league)} · ${esc(m.stage)}</div>
+        <div class="page-sub" style="margin-top:5px">BO${m.bo} · ${games.length}세트 · ${esc(m.date)}</div>
+      </div>
+    </div>
+    <p class="ai-summary">${S.headline}</p>
+    <p style="color:var(--ink-2);font-size:13.5px;line-height:1.75;margin:14px 0 0">${S.summary}</p>
+    <div class="ai-meta">
+      ${S.tags.map(t=>`<span class="tag">#${esc(t)}</span>`).join("")}
+      <div class="conf" style="margin-left:auto">시리즈 신뢰도
+        <div class="conf-track"><div class="conf-fill" style="width:${S.confidence}%"></div></div>
+        <span class="num">${S.confidence}%</span></div>
+    </div>
+  </div>
+
+  <div class="set-bar">
+    <button class="set-tab" aria-pressed="${gi===-1}" onclick="goSet(-1)">
+      <span class="st-n">시리즈 종합</span><span class="st-w">${games.length}세트 전체</span></button>
+    ${games.map((g,i)=>`<button class="set-tab" aria-pressed="${gi===i}" onclick="goSet(${i})">
+      <span class="st-n">${g.set}세트</span>
+      <span class="st-w">${badge(g.winner,'sm')} 승 · ${esc(g.duration)}</span></button>`).join("")}
+  </div>`;
+
+  host.innerHTML = head + (gi===-1 ? seriesView(R,m) : gameView(games[gi],R,m));
+  if(gi>=0) drawGoldChart($("#chartWrap"), games[gi], m);
+}
+
+/* ---------- 시리즈 종합 ---------- */
+function seriesView(R,m){
+  const S=R.series, games=R.games;
+  const maxAbs = Math.max(...games.map(g=>Math.abs(g.gold[g.gold.length-1][1]))) || 1;
+  return `
+  <div class="grid cols-main" style="margin-top:16px">
+    <section class="card">
+      <div class="card-head"><div>
+        <h3 class="card-title">세트별 요약</h3>
+        <div class="page-sub" style="margin-top:1px">막대는 각 세트 종료 시점의 골드 격차</div></div></div>
+      <div class="card-body" style="padding:4px 16px">
+        <div class="chart-legend" style="margin:12px 0 0">
+          <span><i style="background:var(--series-1)"></i>${esc(T(m.a).name)} 우세</span>
+          <span><i style="background:var(--series-2)"></i>${esc(T(m.b).name)} 우세</span>
+        </div>
+        ${games.map((g,i)=>{
+          const v = g.gold[g.gold.length-1][1];
+          const w = Math.abs(v)/maxAbs*46;
+          const pos = v>=0;
+          const txt = (pos?"+":"-") + (Math.abs(v)/1000).toFixed(1) + "k";
+          return `<div class="set-row">
+            <div class="set-no">${g.set}세트<small>${esc(g.duration)}</small></div>
+            <div><div class="set-hl">${g.headline}</div>
+              <div class="set-meta">${badge(g.winner,'sm')}
+                <span class="tag">승 ${esc(T(g.winner).name)}</span>
+                ${g.tags.slice(0,2).map(t=>`<span class="tag">#${esc(t)}</span>`).join("")}</div></div>
+            <div class="gdbar"><div class="zero"></div>
+              <div class="fill" style="${pos?`left:50%`:`left:${50-w}%`};width:${w}%;
+                   background:${pos?'var(--series-1)':'var(--series-2)'}"></div>
+              ${w>=20
+                /* 막대가 충분히 길면 안쪽 끝에, 짧으면 바깥에 — 잘림 방지 */
+                ? `<div class="lbl in" style="${pos?`left:50%`:`left:${50-w}%`};width:${w}%;
+                     text-align:${pos?'right':'left'};padding:0 6px">${txt}</div>`
+                : `<div class="lbl" style="${pos?`left:${51+w}%`:`right:${51+w}%`}">${txt}</div>`}</div>
+            <button class="btn-ai" onclick="goSet(${i})">세트 리포트 →</button>
+          </div>`;}).join("")}
+      </div>
+    </section>
+
+    <div class="grid" style="gap:16px">
+      <section class="card">
+        <div class="card-head"><h3 class="card-title">시리즈 총평</h3>
+          <span class="card-link">MVP ${esc(S.mvp)}</span></div>
+        <div class="card-body">
+          <p style="font-size:13.5px;line-height:1.8;color:var(--ink-2);margin:0">${S.takeaway}</p>
+        </div>
+      </section>
+      <section class="card">
+        <div class="card-head"><h3 class="card-title">분석 정보</h3></div>
+        <div class="card-body" style="font-size:12.5px;color:var(--ink-2);line-height:1.9">
+          <div style="display:flex;justify-content:space-between"><span class="muted">모델</span><b>${esc(S.model)}</b></div>
+          <div style="display:flex;justify-content:space-between"><span class="muted">생성 시각</span><b class="num">${esc(S.generated)}</b></div>
+          <div style="display:flex;justify-content:space-between"><span class="muted">분석 단위</span><b>세트(게임) 단위 ${R.games.length}건</b></div>
+          <div style="display:flex;justify-content:space-between"><span class="muted">시리즈 신뢰도</span><b class="num">${S.confidence}%</b></div>
+        </div>
+      </section>
+      <div class="disclaimer"><span>ⓘ</span>
+        <div>시리즈 총평은 <b style="color:var(--ink-2)">세트별 리포트를 합산해 생성</b>됩니다. 세트마다 밴픽·조합·양상이 달라지므로, 구체적인 근거는 각 세트 리포트에서 확인하세요.</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ---------- 세트(게임) 리포트 ---------- */
+function gameView(G,R,m){
+  const maxRate = 10;
+  return `
+  <div class="grid cols-main" style="margin-top:16px">
+    <div class="grid" style="gap:16px">
+
+      <section class="card">
+        <div class="card-body" style="padding:18px 20px">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+            <span class="tag">${G.set}세트</span>${badge(G.winner,'sm')}
+            <span style="font-size:12.5px;font-weight:700">${esc(T(G.winner).name)} 승</span>
+            <span class="page-sub" style="margin:0">· ${esc(G.duration)}</span>
+            <div class="conf" style="margin-left:auto">세트 신뢰도
+              <div class="conf-track"><div class="conf-fill" style="width:${G.confidence}%"></div></div>
+              <span class="num">${G.confidence}%</span></div>
+          </div>
+          <p style="font-size:15.5px;line-height:1.6;font-weight:600;border-left:3px solid var(--violet);padding-left:14px;margin:0">${G.headline}</p>
+          <p style="color:var(--ink-2);font-size:13.5px;line-height:1.75;margin:12px 0 0">${G.summary}</p>
+          <div class="ai-meta">${G.tags.map(t=>`<span class="tag">#${esc(t)}</span>`).join("")}</div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><div>
+          <h3 class="card-title">경기 흐름 — 골드 격차</h3>
+          <div class="page-sub" style="margin-top:1px">${G.set}세트 · ${esc(T(m.a).name)} 기준 · 0선 위쪽이 ${esc(m.a)} 우세</div>
+        </div></div>
+        <div class="card-body">
+          <div class="chart-legend">
+            <span><i style="background:var(--series-1)"></i>${esc(T(m.a).name)} 우세</span>
+            <span><i style="background:var(--series-2)"></i>${esc(T(m.b).name)} 우세</span>
+            <span class="muted"><i style="background:var(--ink-3);border-radius:50%"></i>주요 이벤트</span>
+          </div>
+          <div class="chart-wrap" id="chartWrap"></div>
+          <button class="table-toggle" onclick="$('#goldTable').classList.toggle('show')">표로 보기 ▾</button>
+          <div class="data-table" id="goldTable">
+            <div class="table-wrap"><table><thead><tr><th>분</th><th class="t-right">골드 격차</th><th>이벤트</th></tr></thead>
+            <tbody>${G.gold.map(([mi,v])=>{const ev=G.events.find(e=>e.m===mi);
+              return `<tr><td class="num">${mi}분</td>
+                <td class="t-right num ${v>=0?'diff-pos':'diff-neg'}">${v>0?"+":""}${v.toLocaleString()}</td>
+                <td class="muted">${ev?esc(ev.label):""}</td></tr>`;}).join("")}</tbody></table></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><h3 class="card-title">국면별 분석</h3><span class="card-link">${G.set}세트</span></div>
+        <div class="card-body" style="padding:4px 16px">
+          ${G.phases.map(p=>`<div class="phase">
+            <div><div class="phase-k">${esc(p.k)}</div><div class="phase-t">${esc(p.t)}</div>
+              <div class="phase-t" style="margin-top:6px;color:var(--ink-2)">${esc(p.swing)}</div></div>
+            <div><div class="phase-body">${p.body}</div>
+              <div class="phase-tags">${p.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join("")}</div></div>
+          </div>`).join("")}
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><h3 class="card-title">승부처</h3>
+          <span class="card-link">골드 스윙 기준 상위 ${G.moments.length}개</span></div>
+        <div class="card-body" style="padding:4px 16px">
+          ${G.moments.map(x=>`<div class="moment">
+            <div class="moment-t">${esc(x.m)}</div>
+            <div><div class="moment-h">${esc(x.h)}</div><div class="moment-d">${esc(x.d)}</div>
+              <div class="swing" style="color:${x.s==='a'?'var(--series-1)':'var(--series-2)'}">
+                ${esc(x.s==='a'?T(m.a).name:T(m.b).name)} ${esc(x.swing)}</div></div>
+          </div>`).join("")}
+        </div>
+      </section>
+    </div>
+
+    <div class="grid" style="gap:16px">
+      <section class="card">
+        <div class="card-head"><h3 class="card-title">선수 평점</h3><span class="card-link">${G.set}세트 MVP ${esc(G.mvp)}</span></div>
+        <div class="card-body" style="padding:8px 16px 14px">
+          ${G.ratings.map(x=>`<div class="rating-row">
+            ${badge(x.t,'sm')}
+            <div><div style="font-size:12.5px;font-weight:700">${esc(x.p)}${x.p===G.mvp?' <span class="tag" style="margin-left:4px">MVP</span>':''}</div>
+              <div style="font-size:11px;color:var(--ink-3)">${esc(x.note)}</div></div>
+            <div class="rate-bar"><div class="rate-fill" style="width:${x.r/maxRate*100}%;background:${x.t===m.a?'var(--series-1)':'var(--series-2)'}"></div></div>
+            <div class="rate-num">${x.r.toFixed(1)}</div>
+          </div>`).join("")}
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><h3 class="card-title">분석 정보</h3></div>
+        <div class="card-body" style="font-size:12.5px;color:var(--ink-2);line-height:1.9">
+          <div style="display:flex;justify-content:space-between"><span class="muted">모델</span><b>${esc(R.series.model)}</b></div>
+          <div style="display:flex;justify-content:space-between"><span class="muted">분석 대상</span><b>${G.set}세트 (게임 단위)</b></div>
+          <div style="display:flex;justify-content:space-between"><span class="muted">입력 데이터</span><b>경기 로그 · 밴픽 · 타임라인</b></div>
+          <div style="display:flex;justify-content:space-between"><span class="muted">세트 신뢰도</span><b class="num">${G.confidence}%</b></div>
+        </div>
+      </section>
+
+      <div class="disclaimer">
+        <span>ⓘ</span>
+        <div>이 리포트는 <b style="color:var(--ink-2)">${G.set}세트 한 게임의</b> 타임라인 데이터를 기반으로 자동 생성된 요약입니다.
+        해설·선수 인터뷰 등 경기 외적 맥락은 반영되지 않으며, 신뢰도가 낮은 구간의 서술은 실제 경기 양상과 다를 수 있습니다.</div>
+      </div>
+    </div>
+  </div>
+
+  ${draftSection(G,m)}`;
+}
+
+/* ============================================================
+   DRAFT BOARD — 방송식 밴픽 순서표
+   ============================================================ */
+/* 프로 드래프트 순서: 1차 밴 6 → 1차 픽 6 → 2차 밴 4 → 2차 픽 4 */
+const DRAFT_ORDER = [
+  ["ban","B",0],["ban","R",0],["ban","B",1],["ban","R",1],["ban","B",2],["ban","R",2],
+  ["pick","B",0],["pick","R",0],["pick","R",1],["pick","B",1],["pick","B",2],["pick","R",2],
+  ["ban","R",3],["ban","B",3],["ban","R",4],["ban","B",4],
+  ["pick","R",3],["pick","B",3],["pick","B",4],["pick","R",4]
+];
+const PHASES = [["1차 밴",6,"ban"],["1차 픽",6,"pick"],["2차 밴",4,"ban"],["2차 픽",4,"pick"]];
+
+const champHue = n => { let h=0; for(const c of n) h=(h*31+c.charCodeAt(0))%360; return h; };
+const champBg  = n => { const h=champHue(n);
+  return `linear-gradient(150deg,hsl(${h} 44% 44%),hsl(${(h+34)%360} 48% 22%))`; };
+const champAbbr = n => n.replace(/[\s0-9]/g,"").slice(0,2);
+
+/* 타일 + 이름 (요약·우선밴 영역용 소형 카드) */
+function miniTile(champ,opts={}){
+  return `<div class="mini">${tile(champ,opts)}
+    <div class="slot-nm ${opts.ban?'':'on'}">${esc(champ)}</div></div>`;
+}
+function tile(champ,{ban=false,ord=null,pos=null,key=false}={}){
+  return `<div class="tile ${ban?'ban':''} ${key?'key':''}" style="background:${champBg(champ)}"
+     title="${esc(champ)}${ban?' (밴)':pos?' · '+pos:''}">
+    ${ord?`<span class="ord">${ord}</span>`:""}
+    <span>${esc(champAbbr(champ))}</span>
+    ${pos?`<span class="pos">${pos}</span>`:""}
+  </div>`;
+}
+
+function draftSection(G,m){
+  const bp = G.banpick;
+  if(!bp) return "";
+  const blueKey = bp.blue || "a";
+  const redKey  = blueKey==="a" ? "b" : "a";
+  const blueCode = m[blueKey], redCode = m[redKey];
+  const side = {B:bp[blueKey], R:bp[redKey]};
+
+  /* 각 진영 행의 20칸을 만든다 — 자기 차례가 아닌 칸은 빈 칸 */
+  const cells = {B:[], R:[]};
+  DRAFT_ORDER.forEach(([kind,s,i],n)=>{
+    const other = s==="B" ? "R" : "B";
+    const champ = kind==="ban" ? side[s].bans[i] : side[s].picks[i][0];
+    const pos   = kind==="ban" ? null : side[s].picks[i][1];
+    cells[s].push(`<div class="slot">
+      ${tile(champ,{ban:kind==="ban",ord:n+1,pos,key:champ===bp.key})}
+      <div class="slot-nm ${kind==="pick"?"on":""}">${esc(champ)}</div></div>`);
+    cells[other].push(`<div class="slot"><div class="tile-empty"></div><div class="slot-nm"></div></div>`);
+  });
+
+  const firstBans = [side.B.bans[0], side.R.bans[0], side.B.bans[1], side.R.bans[1]];
+
+  const sideRow = (s,code,tag) => `<div class="dside">${badge(code)}
+      <span class="dnm">${esc(T(code).name)}</span>
+      <span class="dside-tag ${tag}">${tag==='b'?'청':'홍'}</span></div>${cells[s].join("")}`;
+
+  return `
+  <section class="card" style="margin-top:16px">
+    <div class="card-head">
+      <div><h3 class="card-title">밴픽 분석 — 드래프트 순서표</h3>
+        <div class="page-sub" style="margin-top:1px">왼쪽에서 오른쪽으로 진행 · 숫자는 밴픽 순서 · 화면이 좁으면 좌우로 스크롤</div></div>
+      <span class="tag">${G.set}세트</span>
+    </div>
+    <div class="card-body">
+      <div class="draft-legend">
+        <span><b>빗금 + 어두운 타일</b> = 밴</span>
+        <span><b>밝은 타일</b> = 픽 (하단에 라인 표기)</span>
+        <span><b>①~⑳</b> = 진행 순서</span>
+        <span><b>흰 테두리</b> = AI가 짚은 핵심 카드</span>
+      </div>
+      <div class="draft-scroll"><div class="draft">
+        <div></div>
+        ${PHASES.map(([label,span,kind])=>
+          `<div class="dp ${kind}" style="grid-column:span ${span}">${label} <span style="opacity:.65">${span}개</span></div>`).join("")}
+        ${sideRow("B",blueCode,"b")}
+        ${sideRow("R",redCode,"r")}
+      </div></div>
+
+      <div class="focus-box">
+        <div>
+          <div style="font-size:10.5px;font-weight:800;color:var(--ink-3);letter-spacing:.03em;margin-bottom:7px">우선 밴 (1~4번)</div>
+          <div class="focus-champs">${firstBans.map((c,i)=>miniTile(c,{ban:true,ord:i+1})).join("")}</div>
+        </div>
+        <div class="focus-txt">${bp.banFocus||""}</div>
+      </div>
+
+      <div class="bp-summary">
+        ${[[blueKey,blueCode,"청팀"],[redKey,redCode,"홍팀"]].map(([k,code,lbl])=>`
+        <div class="bp-col">
+          <h5>${esc(T(code).name)} <span style="opacity:.7">· ${lbl}</span></h5>
+          <div class="bp-line"><span class="bp-lb">픽</span>
+            ${bp[k].picks.map(([c,p])=>miniTile(c,{pos:p,key:c===bp.key})).join("")}</div>
+          <div class="bp-line"><span class="bp-lb">밴</span>
+            ${bp[k].bans.map(c=>miniTile(c,{ban:true})).join("")}</div>
+        </div>`).join("")}
+      </div>
+
+      <div class="sep"></div>
+      <p style="font-size:13.5px;line-height:1.75;color:var(--ink-2);margin:0">${bp.note}</p>
+    </div>
+  </section>`;
+}
+
+/* ============================================================
+   GOLD DIFFERENTIAL CHART
+   ============================================================ */
+function drawGoldChart(wrap, R, m){
+  const W=900, H=280, PAD={t:18,r:22,b:34,l:52};
+  const data = R.gold;
+  const xs = data.map(d=>d[0]), ys = data.map(d=>d[1]);
+  const xMax = Math.max(...xs);
+  /* 0을 고정한 단일 선형 스케일 — 위/아래 여백만 잘라낸다 (px당 골드는 동일) */
+  const hi = Math.max(0, ...ys), lo = Math.min(0, ...ys);
+  const step = (hi-lo) > 10000 ? 4000 : 2000;
+  let yMax = hi>0 ? Math.ceil(hi/step)*step : 0;
+  let yMin = lo<0 ? Math.floor(lo/step)*step : 0;
+  if(yMax===yMin) yMax = step;
+
+  const X = v => PAD.l + (v/xMax)*(W-PAD.l-PAD.r);
+  const Y = v => PAD.t + (1-(v-yMin)/(yMax-yMin))*(H-PAD.t-PAD.b);
+
+  const linePts = data.map(d=>`${X(d[0]).toFixed(1)},${Y(d[1]).toFixed(1)}`).join(" ");
+  const areaPts = `${X(0)},${Y(0)} ${linePts} ${X(xMax)},${Y(0)}`;
+
+  const yTicks=[]; for(let v=yMin; v<=yMax; v+=step) yTicks.push(v);
+  const xTicks=[]; for(let v=0; v<=xMax; v+=5) xTicks.push(v);
+
+  const zeroY = Y(0);
+  const fmtG = v => (v>0?"+":"") + (Math.abs(v)>=1000 ? (v/1000).toFixed(1)+"k" : v);
+
+  /* 최대 우세 지점만 직접 라벨 */
+  const peakA = data.reduce((a,b)=>b[1]>a[1]?b:a);
+  const peakB = data.reduce((a,b)=>b[1]<a[1]?b:a);
+
+  wrap.innerHTML = `
+  <svg class="chart" viewBox="0 0 ${W} ${H}" role="img"
+       aria-label="${esc(T(m.a).name)} 기준 분당 골드 격차 추이">
+    <defs>
+      <clipPath id="clipPos"><rect x="0" y="0" width="${W}" height="${zeroY}"/></clipPath>
+      <clipPath id="clipNeg"><rect x="0" y="${zeroY}" width="${W}" height="${H-zeroY}"/></clipPath>
+    </defs>
+
+    ${yTicks.map(v=>`<line class="gridline" x1="${PAD.l}" x2="${W-PAD.r}" y1="${Y(v)}" y2="${Y(v)}"/>`).join("")}
+    ${yTicks.map(v=>`<text class="tick" x="${PAD.l-10}" y="${Y(v)+3.5}" text-anchor="end">${fmtG(v)}</text>`).join("")}
+    ${xTicks.map(v=>`<text class="tick" x="${X(v)}" y="${H-PAD.b+18}" text-anchor="middle">${v}분</text>`).join("")}
+
+    <polygon points="${areaPts}" fill="var(--series-1)" opacity=".10" clip-path="url(#clipPos)"/>
+    <polygon points="${areaPts}" fill="var(--series-2)" opacity=".10" clip-path="url(#clipNeg)"/>
+    <line class="zeroline" x1="${PAD.l}" x2="${W-PAD.r}" y1="${zeroY}" y2="${zeroY}"/>
+
+    <polyline points="${linePts}" fill="none" stroke="var(--series-1)" stroke-width="2"
+      stroke-linejoin="round" stroke-linecap="round" clip-path="url(#clipPos)"/>
+    <polyline points="${linePts}" fill="none" stroke="var(--series-2)" stroke-width="2"
+      stroke-linejoin="round" stroke-linecap="round" clip-path="url(#clipNeg)"/>
+
+    ${R.events.map(e=>{
+      const p = data.find(d=>d[0]===e.m) || data.reduce((a,b)=>Math.abs(b[0]-e.m)<Math.abs(a[0]-e.m)?b:a);
+      const col = e.side==="a" ? "var(--series-1)" : "var(--series-2)";
+      return `<g><circle cx="${X(p[0])}" cy="${Y(p[1])}" r="6" fill="var(--surface-1)"/>
+        <circle cx="${X(p[0])}" cy="${Y(p[1])}" r="4" fill="${col}"/></g>`;}).join("")}
+
+    ${hi>500?`<g>
+      <circle cx="${X(peakA[0])}" cy="${Y(peakA[1])}" r="6" fill="var(--surface-1)"/>
+      <circle cx="${X(peakA[0])}" cy="${Y(peakA[1])}" r="4" fill="var(--series-1)"/>
+      <text class="tick" x="${X(peakA[0])-9}" y="${Y(peakA[1])-9}" text-anchor="end"
+        style="fill:var(--ink-1);font-weight:800">${fmtG(peakA[1])}</text></g>`:""}
+    ${lo<-500?`<g>
+      <circle cx="${X(peakB[0])}" cy="${Y(peakB[1])}" r="6" fill="var(--surface-1)"/>
+      <circle cx="${X(peakB[0])}" cy="${Y(peakB[1])}" r="4" fill="var(--series-2)"/>
+      <text class="tick" x="${X(peakB[0])}" y="${Y(peakB[1])+21}" text-anchor="middle"
+        style="fill:var(--ink-1);font-weight:800">${fmtG(peakB[1])}</text></g>`:""}
+
+    <line id="cross" x1="0" x2="0" y1="${PAD.t}" y2="${H-PAD.b}" stroke="var(--ink-3)"
+      stroke-width="1" opacity="0"/>
+    <rect id="hit" x="${PAD.l}" y="0" width="${W-PAD.l-PAD.r}" height="${H-PAD.b}" fill="transparent"/>
+  </svg>
+  <div class="tooltip" id="tt"></div>`;
+
+  const svg=wrap.querySelector("svg"), hit=wrap.querySelector("#hit"),
+        cross=wrap.querySelector("#cross"), tt=wrap.querySelector("#tt");
+
+  function onMove(ev){
+    const box = svg.getBoundingClientRect();
+    const px = (ev.clientX - box.left) / box.width * W;
+    const minute = Math.round((px-PAD.l)/(W-PAD.l-PAD.r)*xMax);
+    const p = data.reduce((a,b)=>Math.abs(b[0]-minute)<Math.abs(a[0]-minute)?b:a);
+    const evs = R.events.filter(e=>e.m===p[0]);
+    const cx = X(p[0]);
+    cross.setAttribute("x1",cx); cross.setAttribute("x2",cx); cross.setAttribute("opacity",".45");
+    const lead = p[1]>=0 ? T(m.a).name : T(m.b).name;
+    tt.innerHTML = `<b>${p[0]}분</b>
+      <div class="tt-row" style="margin-top:4px"><span>${esc(lead)} 우세</span><span>${fmtG(Math.abs(p[1])).replace("+","")}</span></div>
+      ${evs.map(e=>`<div class="tt-row"><span style="color:${e.side==='a'?'var(--series-1)':'var(--series-2)'}">●</span><span>${esc(e.label)}</span></div>`).join("")}`;
+    tt.style.opacity=1;
+    const left = cx/W*box.width;
+    tt.style.left = Math.min(Math.max(left+12,0), box.width-tt.offsetWidth-4)+"px";
+    tt.style.top  = (Y(p[1])/H*box.height - 10)+"px";
+  }
+  hit.addEventListener("mousemove",onMove);
+  hit.addEventListener("touchmove",e=>{onMove(e.touches[0]);e.preventDefault();},{passive:false});
+  hit.addEventListener("mouseleave",()=>{tt.style.opacity=0;cross.setAttribute("opacity",0);});
+}
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+$("#nav").addEventListener("click",e=>{
+  const b=e.target.closest("button[data-view]"); if(b) go(b.dataset.view);
+});
+$("#themeBtn").addEventListener("click",()=>{
+  const h=document.documentElement;
+  h.dataset.theme = h.dataset.theme==="dark" ? "light" : "dark";
+  if(state.view==="ai") render();
+});
+render();
+</script>
+</body>
+</html>
