@@ -1,0 +1,18 @@
+/* ============================================================
+   responsive.css
+   미디어 쿼리 — 항상 마지막에 로드
+   ============================================================ */
+
+@media (max-width:960px){
+  .cols-main,.cols-2,.cols-3{grid-template-columns:1fr;}
+  .bp-grid{grid-template-columns:1fr;}
+}
+@media (max-width:640px){
+  .match{grid-template-columns:52px minmax(0,1fr);}
+  .match-actions{grid-column:1/-1;justify-content:flex-end;}
+  .phase{grid-template-columns:1fr;gap:6px;}
+  .ai-summary{font-size:15px;}
+  .focus-box{grid-template-columns:1fr;gap:12px;}
+  .bp-summary{grid-template-columns:1fr;gap:18px;}
+}
+

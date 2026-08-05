@@ -1,0 +1,158 @@
+/* ============================================================
+   components.css
+   공용 컴포넌트 — atoms / 경기 카드 / 순위표 / 팀·선수 / 기타
+   ============================================================ */
+
+/* ============================================================
+   ATOMS
+   ============================================================ */
+.tag{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:11px;font-weight:700;letter-spacing:.02em;
+  padding:3px 8px;border-radius:6px;
+  background:var(--surface-3);color:var(--ink-2);
+}
+.tag-live{background:rgba(208,59,59,.16);color:#ff7a7a;}
+.tag-ai{background:linear-gradient(120deg,rgba(57,135,229,.2),rgba(144,133,233,.2));color:#a9b8ff;}
+html[data-theme="light"] .tag-live{color:#c22;}
+html[data-theme="light"] .tag-ai{color:#3f3aa0;}
+.dot-live{width:6px;height:6px;border-radius:50%;background:#ff5757;animation:pulse 1.4s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.35;transform:scale(.8);}}
+
+.badge{
+  width:30px;height:30px;border-radius:8px;flex:none;
+  display:grid;place-items:center;font-weight:800;font-size:10.5px;letter-spacing:-.02em;color:#fff;
+}
+.badge.lg{width:44px;height:44px;font-size:14px;border-radius:11px;}
+.badge.xl{width:62px;height:62px;font-size:19px;border-radius:16px;}
+.badge.sm{width:22px;height:22px;font-size:8.5px;border-radius:6px;}
+
+.pill-row{display:flex;gap:3px;}
+.pill{width:16px;height:16px;border-radius:5px;display:grid;place-items:center;font-size:9px;font-weight:800;}
+.pill.w{background:rgba(12,163,12,.18);color:#3fd23f;}
+.pill.l{background:rgba(208,59,59,.16);color:#ff7a7a;}
+html[data-theme="light"] .pill.w{color:#0a7d0a;}
+html[data-theme="light"] .pill.l{color:#b52d2d;}
+
+.muted{color:var(--ink-3);}
+.num{font-variant-numeric:tabular-nums;}
+.sep{height:1px;background:var(--line-soft);margin:12px 0;}
+
+.seg{display:inline-flex;background:var(--surface-2);border:1px solid var(--line-soft);border-radius:10px;padding:3px;gap:2px;}
+.seg button{padding:5px 12px;border-radius:7px;font-size:12.5px;font-weight:600;color:var(--ink-3);}
+.seg button[aria-pressed="true"]{background:var(--surface-3);color:var(--ink-1);}
+
+.chip-row{display:flex;gap:6px;flex-wrap:wrap;}
+.chip{
+  padding:5px 11px;border-radius:99px;border:1px solid var(--line);
+  font-size:12.5px;font-weight:600;color:var(--ink-3);
+}
+.chip:hover{color:var(--ink-1);border-color:var(--ink-3);}
+.chip[aria-pressed="true"]{background:var(--accent-soft);border-color:transparent;color:var(--accent);}
+html[data-theme="light"] .chip[aria-pressed="true"]{color:var(--accent);}
+
+/* ============================================================
+   MATCH LIST
+   ============================================================ */
+.day-label{
+  font-size:12.5px;font-weight:700;color:var(--ink-3);
+  margin:22px 0 9px;display:flex;align-items:center;gap:8px;
+}
+.day-label::after{content:"";flex:1;height:1px;background:var(--line-soft);}
+
+.match{
+  display:grid;grid-template-columns:78px minmax(0,1fr) auto;align-items:center;gap:14px;
+  padding:12px 16px;border:1px solid var(--line-soft);border-radius:var(--r-md);
+  background:var(--surface-1);margin-bottom:8px;
+  transition:border-color .15s,transform .15s;
+}
+.match:hover{border-color:var(--line);transform:translateX(2px);}
+.match-time{font-size:12.5px;color:var(--ink-3);font-weight:600;text-align:center;line-height:1.3;}
+.match-time b{display:block;color:var(--ink-1);font-size:14px;font-weight:700;}
+.match-teams{display:flex;flex-direction:column;gap:7px;min-width:0;}
+.mt-row{display:flex;align-items:center;gap:9px;min-width:0;}
+.mt-name{font-weight:600;font-size:13.5px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.mt-score{font-size:15px;font-weight:800;width:18px;text-align:center;}
+.mt-row.lose .mt-name,.mt-row.lose .mt-score{color:var(--ink-3);}
+.match-actions{display:flex;align-items:center;gap:8px;}
+.btn-ai{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:7px 12px;border-radius:9px;font-size:12.5px;font-weight:700;
+  background:linear-gradient(120deg,rgba(57,135,229,.16),rgba(144,133,233,.16));
+  color:#a9b8ff;border:1px solid rgba(144,133,233,.22);white-space:nowrap;
+}
+.btn-ai:hover{filter:brightness(1.25);}
+html[data-theme="light"] .btn-ai{color:#3f3aa0;border-color:rgba(74,58,167,.2);}
+
+/* ============================================================
+   STANDINGS
+   ============================================================ */
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{
+  text-align:left;font-size:11px;font-weight:700;letter-spacing:.04em;
+  color:var(--ink-3);padding:0 10px 9px;border-bottom:1px solid var(--line-soft);white-space:nowrap;
+}
+td{padding:10px;border-bottom:1px solid var(--line-soft);vertical-align:middle;}
+tbody tr:last-child td{border-bottom:0;}
+tbody tr:hover{background:var(--surface-2);}
+.t-right{text-align:right;}
+.t-center{text-align:center;}
+.rank{font-weight:800;font-size:13px;width:28px;color:var(--ink-3);}
+.rank.q{color:var(--accent);}
+.team-cell{display:flex;align-items:center;gap:9px;font-weight:650;}
+.diff-pos{color:#3fd23f;}
+.diff-neg{color:#ff7a7a;}
+html[data-theme="light"] .diff-pos{color:#067a06;}
+html[data-theme="light"] .diff-neg{color:#b52d2d;}
+.qual-note{display:flex;gap:16px;flex-wrap:wrap;font-size:11.5px;color:var(--ink-3);margin-top:12px;}
+.qual-note span{display:flex;align-items:center;gap:6px;}
+.qual-key{width:8px;height:8px;border-radius:3px;}
+
+/* ============================================================
+   TEAM / PLAYER
+   ============================================================ */
+.team-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(196px,1fr));gap:12px;}
+.team-card{
+  background:var(--surface-1);border:1px solid var(--line-soft);border-radius:var(--r-lg);
+  padding:16px;display:flex;flex-direction:column;gap:11px;transition:border-color .15s,transform .15s;
+  position:relative;overflow:hidden;
+}
+.team-card::before{content:"";position:absolute;inset:0 0 auto;height:3px;background:var(--tc,var(--accent));}
+.team-card:hover{transform:translateY(-2px);border-color:var(--line);}
+.team-card h4{font-size:14.5px;font-weight:750;}
+.team-meta{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-3);}
+
+.roster{display:grid;gap:8px;}
+.roster-row{
+  display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:11px;
+  padding:9px 11px;border-radius:var(--r-md);background:var(--surface-2);
+  border:1px solid transparent;transition:border-color .15s;
+}
+.roster-row:hover{border-color:var(--line);}
+.pos{
+  font-size:9.5px;font-weight:800;letter-spacing:.03em;color:var(--ink-3);
+  text-align:center;padding:4px 0;border-radius:6px;background:var(--surface-3);
+}
+.pl-name{font-weight:700;font-size:13.5px;}
+.pl-real{font-size:11.5px;color:var(--ink-3);}
+.kda{font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums;}
+
+.stat-tile{background:var(--surface-2);border-radius:var(--r-md);padding:13px 14px;}
+.stat-label{font-size:11.5px;color:var(--ink-3);font-weight:600;}
+.stat-value{font-size:23px;font-weight:800;letter-spacing:-.03em;margin-top:2px;}
+.stat-delta{font-size:11.5px;font-weight:700;margin-top:1px;}
+
+/* ============================================================
+   MISC
+   ============================================================ */
+.news-item{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid var(--line-soft);}
+.news-item:last-child{border-bottom:0;}
+.news-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);margin-top:7px;flex:none;}
+.news-h{font-size:13px;font-weight:650;line-height:1.5;}
+.news-m{font-size:11.5px;color:var(--ink-3);margin-top:3px;}
+
+.empty{padding:44px 20px;text-align:center;color:var(--ink-3);font-size:13px;}
+.back-link{font-size:12.5px;color:var(--ink-3);font-weight:600;margin-bottom:12px;display:inline-flex;gap:6px;align-items:center;}
+.back-link:hover{color:var(--accent);}
+
