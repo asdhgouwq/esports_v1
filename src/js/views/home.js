@@ -4,7 +4,6 @@ import { NEWS } from '../data/news.js';
 import { renderMatchCard } from '../components/match-card.js';
 import { renderStandingsTable } from '../components/standings-table.js';
 import { renderLeagueStandings } from '../components/league-standings.js';
-import { renderChampionStats } from '../components/champion-stats.js';
 import { store } from '../state/store.js';
 
 export function renderHome() {
@@ -32,7 +31,6 @@ export function renderHome() {
   const standingsHtml = renderStandingsTable(standingsLegend, '레전드 그룹');
 
   const leagueStandingsHtml = renderLeagueStandings(store.state.homeLeagueFilter || 'LCK');
-  const championStatsHtml = renderChampionStats(store.state.homeChampionLeague || 'LCK');
 
   container.innerHTML = `
     <div class="page-head">
@@ -62,10 +60,6 @@ export function renderHome() {
         <div style="margin-top:16px">
           ${standingsHtml}
         </div>
-
-        <div style="margin-top:16px">
-          ${championStatsHtml}
-        </div>
       </div>
 
       <div>
@@ -85,18 +79,14 @@ export function renderHome() {
     </div>
   `;
 
-  const leagueTabsContainers = container.querySelectorAll('.league-tabs');
-  leagueTabsContainers.forEach((tabContainer, idx) => {
-    tabContainer.querySelectorAll('[data-league]').forEach(btn => {
+  const leagueTabsContainer = container.querySelector('.league-tabs');
+  if (leagueTabsContainer) {
+    leagueTabsContainer.querySelectorAll('[data-league]').forEach(btn => {
       btn.addEventListener('click', e => {
         const league = e.target.getAttribute('data-league');
-        if (idx === 0) {
-          store.setState('homeLeagueFilter', league);
-        } else {
-          store.setState('homeChampionLeague', league);
-        }
+        store.setState('homeLeagueFilter', league);
         renderHome();
       });
     });
-  });
+  }
 }

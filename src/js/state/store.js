@@ -14,8 +14,7 @@ class Store {
       },
       activeMatch: null,
       activeTeam: null,
-      homeLeagueFilter: 'LCK',
-      homeChampionLeague: 'LCK'
+      homeLeagueFilter: 'LCK'
     };
 
     this.listeners = {};
