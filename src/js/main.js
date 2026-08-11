@@ -5,6 +5,11 @@
 
 import { store } from './state/store.js';
 import { $, $$, addClass, removeClass, on } from './utils/dom.js';
+import { renderHome } from './views/home.js';
+import { renderSchedule } from './views/schedule.js';
+import { renderStandings } from './views/standings.js';
+import { renderTeams } from './views/teams.js';
+import { renderAnalysis } from './views/analysis.js';
 
 /**
  * 앱 초기화
@@ -66,7 +71,6 @@ function initEventListeners() {
  * 활성 뷰 설정
  */
 function setActiveView(view) {
-  // 네비 버튼 활성화 상태 업데이트
   const navButtons = $$('.nav button');
   navButtons.forEach(btn => {
     if (btn.getAttribute('data-view') === view) {
@@ -76,8 +80,8 @@ function setActiveView(view) {
     }
   });
 
-  // 상태 업데이트
   store.setView(view);
+  renderViewContent(view);
 }
 
 /**
@@ -106,7 +110,20 @@ function updateViewDisplay() {
  */
 function renderInitialView() {
   setActiveView('home');
-  // TODO: 각 뷰의 렌더링 함수 호출
+  renderViewContent('home');
+}
+
+/**
+ * 뷰 컨텐츠 렌더링
+ */
+function renderViewContent(view) {
+  switch(view) {
+    case 'home': renderHome(); break;
+    case 'schedule': renderSchedule(); break;
+    case 'standings': renderStandings(); break;
+    case 'teams': renderTeams(); break;
+    case 'ai': renderAnalysis(); break;
+  }
 }
 
 // 앱 자동 시작

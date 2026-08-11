@@ -15,6 +15,11 @@ export function formatWinRate(wins, losses) {
   return `${Math.round(wins / (wins + losses) * 100)}%`;
 }
 
+export function formatTime(timeStr) {
+  if (!timeStr) return '-';
+  return timeStr;
+}
+
 export function formatDuration(sec) {
   if (!sec) return '0:00';
   const m = Math.floor(sec / 60);
