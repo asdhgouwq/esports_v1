@@ -3,8 +3,6 @@ import { STANDINGS } from '../data/standings.js';
 import { NEWS } from '../data/news.js';
 import { renderMatchCard } from '../components/match-card.js';
 import { renderStandingsTable } from '../components/standings-table.js';
-import { renderLeagueStandings } from '../components/league-standings.js';
-import { store } from '../state/store.js';
 
 export function renderHome() {
   const container = document.getElementById('view-home');
@@ -29,8 +27,6 @@ export function renderHome() {
 
   const standingsLegend = STANDINGS.legend || {};
   const standingsHtml = renderStandingsTable(standingsLegend, '레전드 그룹');
-
-  const leagueStandingsHtml = renderLeagueStandings(store.state.homeLeagueFilter || 'LCK');
 
   container.innerHTML = `
     <div class="page-head">
@@ -71,22 +67,7 @@ export function renderHome() {
             ${newsHtml}
           </div>
         </div>
-
-        <div style="margin-top:16px">
-          ${leagueStandingsHtml}
-        </div>
       </div>
     </div>
   `;
-
-  const leagueTabsContainer = container.querySelector('.league-tabs');
-  if (leagueTabsContainer) {
-    leagueTabsContainer.querySelectorAll('[data-league]').forEach(btn => {
-      btn.addEventListener('click', e => {
-        const league = e.target.getAttribute('data-league');
-        store.setState('homeLeagueFilter', league);
-        renderHome();
-      });
-    });
-  }
 }
