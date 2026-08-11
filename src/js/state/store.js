@@ -13,7 +13,8 @@ class Store {
         tab: 'upcoming'
       },
       activeMatch: null,
-      activeTeam: null
+      activeTeam: null,
+      homeLeagueFilter: 'LCK'
     };
 
     this.listeners = {};
