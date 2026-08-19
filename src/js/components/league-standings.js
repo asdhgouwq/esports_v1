@@ -1,14 +1,11 @@
 import { TEAMS } from '../config/constants.js';
 import { LEAGUE_STANDINGS } from '../data/league-standings.js';
+import { getLeagueName } from '../router.js';
 
-export function renderLeagueStandings(activeLeague = 'LCK') {
-  const leagueData = LEAGUE_STANDINGS[activeLeague] || LEAGUE_STANDINGS.LCK;
+function renderStandingsTable(leagueId) {
+  const leagueKey = leagueId.toUpperCase();
+  const leagueData = LEAGUE_STANDINGS[leagueKey] || LEAGUE_STANDINGS.LCK;
   const rows = leagueData.rows || [];
-
-  const leagueTabs = ['LCK', 'LPL', 'LEC'].map(league => {
-    const active = league === activeLeague ? ' aria-pressed="true"' : '';
-    return `<button class="chip" data-league="${league}"${active}>${league}</button>`;
-  }).join('');
 
   const tableRows = rows.map((row, idx) => {
     const team = TEAMS[row.t];
@@ -36,31 +33,56 @@ export function renderLeagueStandings(activeLeague = 'LCK') {
   }).join('');
 
   return `
-    <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:40px">순위</th>
+          <th>팀</th>
+          <th style="width:70px">승-패</th>
+          <th style="width:80px">세트</th>
+          <th style="width:90px">최근</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${tableRows}
+      </tbody>
+    </table>
+  `;
+}
+
+export function renderLeagueStandings(leagueId = 'lck') {
+  const leagueKey = leagueId.toUpperCase();
+  const leagueName = getLeagueName(leagueId);
+  const tableHtml = renderStandingsTable(leagueId);
+
+  return `
+    <div class="card" id="league-standings-card">
       <div class="card-head">
-        <h3 class="card-title">리그별 현 순위</h3>
+        <h3 class="card-title">${leagueName} 순위</h3>
       </div>
       <div class="card-body">
-        <div class="league-tabs" style="display:flex;gap:4px;margin-bottom:16px">
-          ${leagueTabs}
-        </div>
-
         <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th style="width:40px">순위</th>
-                <th>팀</th>
-                <th style="width:70px">승-패</th>
-                <th style="width:80px">세트</th>
-                <th style="width:90px">최근</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${tableRows}
-            </tbody>
-          </table>
+          ${tableHtml}
         </div>
+      </div>
+    </div>
+  `;
+}
+
+export function updateLeagueStandingsDOM(leagueId) {
+  const card = document.getElementById('league-standings-card');
+  if (!card) return;
+
+  const leagueName = getLeagueName(leagueId);
+  const tableHtml = renderStandingsTable(leagueId);
+
+  card.innerHTML = `
+    <div class="card-head">
+      <h3 class="card-title">${leagueName} 순위</h3>
+    </div>
+    <div class="card-body">
+      <div class="table-wrap">
+        ${tableHtml}
       </div>
     </div>
   `;

@@ -1,4 +1,5 @@
 import { LEAGUES, MENUS, navigateTo, getLeagueEmoji } from '../router.js';
+import { updateLeagueStandingsDOM } from './league-standings.js';
 
 export function renderLeagueNav(activeLeague) {
   return LEAGUES.map(league => {
@@ -13,10 +14,18 @@ export function renderLeagueNav(activeLeague) {
 }
 
 export function bindLeagueNavEvents(container, currentLeague, currentPage) {
+  if (!container) return;
+
   container.querySelectorAll('[data-league]').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
       const league = btn.getAttribute('data-league');
-      navigateTo(league, currentPage);
+      if (league && league !== currentLeague) {
+        updateLeagueStandingsDOM(league);
+        navigateTo(league, currentPage);
+      }
     });
   });
 }
@@ -33,10 +42,17 @@ export function renderSubmenuBar(activePage) {
 }
 
 export function bindSubmenuBarEvents(container, currentLeague) {
+  if (!container) return;
+
   container.querySelectorAll('[data-page]').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
       const page = btn.getAttribute('data-page');
-      navigateTo(currentLeague, page);
+      if (page) {
+        navigateTo(currentLeague, page);
+      }
     });
   });
 }

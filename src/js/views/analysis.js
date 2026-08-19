@@ -7,7 +7,8 @@ import { renderDraftBoard } from '../components/draft-board.js';
 export function renderAnalysis({ leagueId, container }) {
   if (!container) return;
 
-  const doneMatches = MATCHES.filter(m => m.status === 'done' && REPORTS[m.id]).slice(0, 4);
+  const league = leagueId.toUpperCase();
+  const doneMatches = MATCHES.filter(m => m.status === 'done' && m.league === league && REPORTS[m.id]).slice(0, 4);
 
   if (doneMatches.length === 0) {
     container.innerHTML = '<div class="empty">분석 가능한 경기가 없습니다</div>';

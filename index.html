@@ -10,25 +10,28 @@
 <link rel="stylesheet" href="src/styles/report.css">
 <link rel="stylesheet" href="src/styles/draft.css">
 <link rel="stylesheet" href="src/styles/charts.css">
-<link rel="stylesheet" href="src/styles/nested-gnb.css">
+<link rel="stylesheet" href="src/styles/sidebar-layout.css">
 <link rel="stylesheet" href="src/styles/responsive.css">
 </head>
 <body>
-<header class="gnb-wrapper">
-  <!-- 1열: 브랜드 + 리그 선택 바 -->
-  <div class="gnb-header">
+<!-- 좌측 사이드바: 리그 네비게이션 -->
+<aside class="global-sidebar" id="globalSidebar">
+  <nav class="league-nav" id="leagueNav"></nav>
+</aside>
+
+<!-- 상단 네비게이션 바 -->
+<header class="top-navbar">
+  <div class="navbar-content">
     <div class="brand"><span class="brand-mark">R</span>RIFT<span style="color:var(--accent)">.GG</span></div>
-    <nav class="league-nav" id="leagueNav"></nav>
+    <nav class="submenu-bar" id="submenuBar"></nav>
     <div class="topbar-tools">
       <button class="icon-btn" id="themeBtn" title="라이트/다크 전환" aria-label="테마 전환">◐</button>
     </div>
   </div>
-
-  <!-- 2열: 서브 메뉴 바 -->
-  <nav class="submenu-bar" id="submenuBar"></nav>
 </header>
 
-<main class="shell" id="mainContent">
+<!-- 메인 콘텐츠 영역 -->
+<main class="main-content" id="mainContent">
   <section class="view is-active" id="view-home"></section>
   <section class="view" id="view-schedule"></section>
   <section class="view" id="view-standings"></section>

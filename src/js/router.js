@@ -9,9 +9,17 @@ const LEAGUES = [
 const PAGES = ['home', 'schedule', 'standings', 'teams', 'ai-analysis'];
 
 export function parseRoute() {
-  const hash = window.location.hash.slice(1) || 'lck/home';
-  const parts = hash.split('/');
+  let hash = window.location.hash;
 
+  if (hash.startsWith('#')) {
+    hash = hash.slice(1);
+  }
+
+  if (!hash || hash === '/') {
+    hash = 'lck/home';
+  }
+
+  const parts = hash.split('/').filter(p => p.length > 0);
   const leagueId = parts[0] || 'lck';
   const page = parts[1] || 'home';
 
@@ -29,7 +37,20 @@ export function parseRoute() {
 }
 
 export function navigateTo(leagueId, page) {
-  window.location.hash = `${leagueId}/${page}`;
+  const cleanLeagueId = String(leagueId).trim().toLowerCase();
+  const cleanPage = String(page).trim().toLowerCase();
+
+  if (!LEAGUES.find(l => l.id === cleanLeagueId)) {
+    console.warn(`Invalid league: ${cleanLeagueId}`);
+    return;
+  }
+
+  if (!PAGES.includes(cleanPage)) {
+    console.warn(`Invalid page: ${cleanPage}`);
+    return;
+  }
+
+  window.location.hash = `#${cleanLeagueId}/${cleanPage}`;
 }
 
 export function getLeagueName(leagueId) {

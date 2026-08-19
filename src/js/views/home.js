@@ -1,8 +1,6 @@
 import { MATCHES } from '../data/matches.js';
-import { STANDINGS } from '../data/standings.js';
 import { NEWS } from '../data/news.js';
 import { renderMatchCard } from '../components/match-card.js';
-import { renderStandingsTable } from '../components/standings-table.js';
 import { renderLeagueStandings } from '../components/league-standings.js';
 
 export function renderHome({ leagueId, container }) {
@@ -25,8 +23,6 @@ export function renderHome({ leagueId, container }) {
     </div>
   `).join('');
 
-  const standingsLegend = STANDINGS.legend || {};
-  const standingsHtml = renderStandingsTable(standingsLegend, '레전드 그룹');
   const leagueStandingsHtml = renderLeagueStandings(leagueId);
 
   container.innerHTML = `
@@ -52,10 +48,6 @@ export function renderHome({ leagueId, container }) {
           <div class="card-body">
             ${upcomingMatches.map(m => renderMatchCard(m)).join('') || '<div class="empty">예정된 경기가 없습니다</div>'}
           </div>
-        </div>
-
-        <div style="margin-top:16px">
-          ${standingsHtml}
         </div>
       </div>
 

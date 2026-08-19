@@ -1,23 +1,26 @@
 import { STANDINGS } from '../data/standings.js';
+import { LEAGUE_STANDINGS } from '../data/league-standings.js';
 import { renderStandingsTable } from '../components/standings-table.js';
+import { getLeagueName } from '../router.js';
 
 export function renderStandings({ leagueId, container }) {
   if (!container) return;
 
-  const legend = STANDINGS.legend || {};
-  const rise = STANDINGS.rise || {};
+  const leagueKey = leagueId.toUpperCase();
+  const leagueName = getLeagueName(leagueId);
 
-  const legendHtml = renderStandingsTable(legend, '레전드 그룹');
-  const riseHtml = renderStandingsTable(rise, '라이즈 그룹');
+  const leagueData = LEAGUE_STANDINGS[leagueKey] || LEAGUE_STANDINGS.LCK;
+  const rows = leagueData.rows || [];
+
+  const standingsHtml = renderStandingsTable({ rows }, `${leagueName} 순위`);
 
   container.innerHTML = `
     <div class="page-head">
       <h1 class="page-title">순위</h1>
     </div>
 
-    <div class="grid cols-1" style="gap:16px">
-      ${legendHtml}
-      ${riseHtml}
+    <div>
+      ${standingsHtml}
     </div>
   `;
 }
