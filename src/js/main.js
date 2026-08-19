@@ -1,99 +1,130 @@
+/**
+ * RIFT.GG - Main App Entry Point
+ * 앱 초기화 및 전체 로직 조율
+ */
+
 import { store } from './state/store.js';
-import { parseRoute, onRouteChange } from './router.js';
-import { renderLeagueSidebar, bindLeagueSidebarEvents } from './components/league-sidebar.js';
-import { renderSubmenuNav, bindSubmenuNavEvents } from './components/submenu-nav.js';
+import { $, $$, addClass, removeClass, on } from './utils/dom.js';
 import { renderHome } from './views/home.js';
 import { renderSchedule } from './views/schedule.js';
 import { renderStandings } from './views/standings.js';
 import { renderTeams } from './views/teams.js';
 import { renderAnalysis } from './views/analysis.js';
 
+/**
+ * 앱 초기화
+ */
 export function initApp() {
   initTheme();
-  renderApp();
-  onRouteChange(renderApp);
+  initNavigation();
+  initEventListeners();
+  renderInitialView();
 }
 
+/**
+ * 테마 초기화 및 설정
+ */
 function initTheme() {
   const html = document.documentElement;
   html.setAttribute('data-theme', store.state.theme);
 
+  // 테마 변경 리스너
   store.on('change', ({ path, value }) => {
     if (path === 'theme') {
       html.setAttribute('data-theme', value);
     }
   });
+}
 
-  const themeBtn = document.getElementById('themeBtn');
+/**
+ * 네비게이션 설정
+ */
+function initNavigation() {
+  const navButtons = $$('.nav button');
+
+  navButtons.forEach(btn => {
+    on(btn, 'click', () => {
+      const view = btn.getAttribute('data-view');
+      setActiveView(view);
+    });
+  });
+}
+
+/**
+ * 이벤트 리스너 설정
+ */
+function initEventListeners() {
+  const themeBtn = $('#themeBtn');
   if (themeBtn) {
-    themeBtn.addEventListener('click', () => store.toggleTheme());
+    on(themeBtn, 'click', () => store.toggleTheme());
+  }
+
+  // 상태 변경 감지
+  store.on('change', ({ path }) => {
+    if (path === 'currentView') {
+      updateViewDisplay();
+    }
+  });
+}
+
+/**
+ * 활성 뷰 설정
+ */
+function setActiveView(view) {
+  const navButtons = $$('.nav button');
+  navButtons.forEach(btn => {
+    if (btn.getAttribute('data-view') === view) {
+      btn.setAttribute('aria-current', 'page');
+    } else {
+      btn.removeAttribute('aria-current');
+    }
+  });
+
+  store.setView(view);
+  renderViewContent(view);
+}
+
+/**
+ * 뷰 표시 업데이트
+ */
+function updateViewDisplay() {
+  const currentView = store.state.currentView;
+  const sections = $$('.view');
+
+  sections.forEach(section => {
+    const viewId = section.getAttribute('id');
+    const expectedId = `view-${currentView}`;
+
+    if (viewId === expectedId) {
+      addClass(section, 'is-active');
+      section.style.display = 'block';
+    } else {
+      removeClass(section, 'is-active');
+      section.style.display = 'none';
+    }
+  });
+}
+
+/**
+ * 초기 뷰 렌더링
+ */
+function renderInitialView() {
+  setActiveView('home');
+  renderViewContent('home');
+}
+
+/**
+ * 뷰 컨텐츠 렌더링
+ */
+function renderViewContent(view) {
+  switch(view) {
+    case 'home': renderHome(); break;
+    case 'schedule': renderSchedule(); break;
+    case 'standings': renderStandings(); break;
+    case 'teams': renderTeams(); break;
+    case 'ai': renderAnalysis(); break;
   }
 }
 
-function renderApp() {
-  const { leagueId, page } = parseRoute();
-
-  renderLeagueSidebarUI(leagueId, page);
-  renderSubmenuUI(leagueId, page);
-  renderPageContent(leagueId, page);
-}
-
-function renderLeagueSidebarUI(leagueId, page) {
-  const sidebar = document.getElementById('leagueSidebar');
-  sidebar.innerHTML = renderLeagueSidebar(leagueId);
-  bindLeagueSidebarEvents(sidebar, leagueId, page);
-}
-
-function renderSubmenuUI(leagueId, page) {
-  const submenuNav = document.getElementById('submenuNav');
-  submenuNav.innerHTML = renderSubmenuNav(leagueId, page);
-  bindSubmenuNavEvents(submenuNav, leagueId);
-}
-
-function renderPageContent(leagueId, page) {
-  const mainContent = document.getElementById('mainContent');
-  const sections = mainContent.querySelectorAll('.view');
-
-  sections.forEach(section => section.classList.remove('is-active'));
-  mainContent.style.display = 'block';
-
-  const pageMap = {
-    home: 'view-home',
-    schedule: 'view-schedule',
-    standings: 'view-standings',
-    teams: 'view-teams',
-    'ai-analysis': 'view-ai'
-  };
-
-  const viewId = pageMap[page];
-  const viewElement = mainContent.querySelector(`#${viewId}`);
-
-  if (viewElement) {
-    viewElement.classList.add('is-active');
-    renderPage(leagueId, page, viewElement);
-  }
-}
-
-function renderPage(leagueId, page, container) {
-  const pageData = { leagueId, page, container };
-
-  switch (page) {
-    case 'home':
-      renderHome(pageData);
-      break;
-    case 'schedule':
-      renderSchedule(pageData);
-      break;
-    case 'standings':
-      renderStandings(pageData);
-      break;
-    case 'teams':
-      renderTeams(pageData);
-      break;
-    case 'ai-analysis':
-      renderAnalysis(pageData);
-      break;
-  }
-}
-
+// 앱 자동 시작
 document.addEventListener('DOMContentLoaded', initApp);

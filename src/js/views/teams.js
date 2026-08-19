@@ -2,7 +2,10 @@ import { TEAMS } from '../config/constants.js';
 import { ROSTERS } from '../data/rosters.js';
 import { renderTeamCard } from '../components/team-card.js';
 
-export function renderTeams({ leagueId, container }) {
+export function renderTeams() {
+  const container = document.getElementById('view-teams');
+  if (!container) return;
+
   const teamCodes = Object.keys(TEAMS);
   const teamCardsHtml = teamCodes.map(code => {
     const team = TEAMS[code];

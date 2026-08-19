@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>RIFT.GG — e스포츠 정보 플랫폼</title>
+<!-- CSS: 로드 순서 고정 -->
 <link rel="stylesheet" href="src/styles/base.css">
-<link rel="stylesheet" href="src/styles/gnb.css">
 <link rel="stylesheet" href="src/styles/layout.css">
 <link rel="stylesheet" href="src/styles/components.css">
 <link rel="stylesheet" href="src/styles/report.css">
@@ -14,36 +14,32 @@
 <link rel="stylesheet" href="src/styles/responsive.css">
 </head>
 <body>
-<div class="app-layout">
-  <!-- 좌측 리그 사이드바 -->
-  <aside class="league-sidebar" id="leagueSidebar"></aside>
-
-  <!-- 우측 메인 영역 -->
-  <div class="main-area">
-    <!-- 상단 헤더 -->
-    <header class="topbar">
-      <div class="topbar-inner">
-        <div class="brand"><span class="brand-mark">R</span>RIFT<span style="color:var(--accent)">.GG</span></div>
-        <div class="topbar-tools">
-          <button class="icon-btn" id="themeBtn" title="라이트/다크 전환" aria-label="테마 전환">◐</button>
-        </div>
-      </div>
-    </header>
-
-    <!-- 세부 메뉴 바 -->
-    <nav class="submenu-nav" id="submenuNav"></nav>
-
-    <!-- 메인 콘텐츠 -->
-    <main class="shell" id="mainContent">
-      <section class="view is-active" id="view-home"></section>
-      <section class="view" id="view-schedule"></section>
-      <section class="view" id="view-standings"></section>
-      <section class="view" id="view-teams"></section>
-      <section class="view" id="view-ai"></section>
-    </main>
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand"><span class="brand-mark">R</span>RIFT<span style="color:var(--accent)">.GG</span></div>
+    <nav class="nav" id="nav">
+      <button data-view="home" aria-current="page">홈</button>
+      <button data-view="schedule">일정 · 결과</button>
+      <button data-view="standings">순위</button>
+      <button data-view="teams">팀</button>
+      <button data-view="ai">AI 분석</button>
+    </nav>
+    <div class="topbar-tools">
+      <button class="icon-btn" id="themeBtn" title="라이트/다크 전환" aria-label="테마 전환">◐</button>
+    </div>
   </div>
-</div>
+</header>
 
+<main class="shell">
+  <section class="view is-active" id="view-home"></section>
+  <section class="view" id="view-schedule"></section>
+  <section class="view" id="view-standings"></section>
+  <section class="view" id="view-teams"></section>
+  <section class="view" id="view-team"></section>
+  <section class="view" id="view-ai"></section>
+</main>
+
+<!-- ⚠️ 모든 JavaScript는 모듈로 분리됨 (src/js/) -->
 <script type="module" src="src/js/main.js"></script>
 </body>
 </html>
