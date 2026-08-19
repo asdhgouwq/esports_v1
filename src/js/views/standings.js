@@ -1,8 +1,7 @@
 import { STANDINGS } from '../data/standings.js';
 import { renderStandingsTable } from '../components/standings-table.js';
 
-export function renderStandings() {
-  const container = document.getElementById('view-standings');
+export function renderStandings({ leagueId, container }) {
   if (!container) return;
 
   const legend = STANDINGS.legend || {};

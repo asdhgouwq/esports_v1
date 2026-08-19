@@ -3,10 +3,8 @@ import { REPORTS } from '../data/reports.js';
 import { TEAMS } from '../config/constants.js';
 import { renderAIReportSeries, renderAIReportGame } from '../components/ai-report.js';
 import { renderDraftBoard } from '../components/draft-board.js';
-import { store } from '../state/store.js';
 
-export function renderAnalysis() {
-  const container = document.getElementById('view-ai');
+export function renderAnalysis({ leagueId, container }) {
   if (!container) return;
 
   const doneMatches = MATCHES.filter(m => m.status === 'done' && REPORTS[m.id]).slice(0, 4);
@@ -16,7 +14,7 @@ export function renderAnalysis() {
     return;
   }
 
-  const activeMatch = store.state.activeMatch || doneMatches[0].id;
+  const activeMatch = doneMatches[0].id;
 
   const matchTabsHtml = doneMatches.map(m => {
     const teamA = TEAMS[m.a];
@@ -76,15 +74,6 @@ export function renderAnalysis() {
       ${gamesHtml}
     </div>
   `;
-
-  // 이벤트 바인딩
-  container.querySelectorAll('[data-match]').forEach(btn => {
-    btn.addEventListener('click', e => {
-      const matchId = e.target.closest('[data-match]').getAttribute('data-match');
-      store.setState('activeMatch', matchId);
-      renderAnalysis();
-    });
-  });
 
   container.querySelectorAll('[data-set]').forEach(btn => {
     btn.addEventListener('click', e => {
