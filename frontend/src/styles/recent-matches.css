@@ -1,0 +1,25 @@
+.recent-matches { margin-top: 32px; }
+.recent-matches .panel-title { padding-bottom: 24px; }
+.recent-matches .panel-title h2 { font-size: 21px; margin-top: 8px; }
+.recent-matches .panel-title p { font-size: 11px; color: #93a0a3; margin-top: 9px; }
+.recent-table-scroll { overflow-x: auto; }
+.recent-table { width: 100%; border-collapse: collapse; min-width: 700px; }
+.recent-table th { padding: 13px 22px; background: #202729; border-block: 1px solid #30383b; text-align: left; color: #98a8ac; font-size: 10px; font-weight: 500; }
+.recent-table th span { font-size: 8px; color: #7b898e; margin-left: 5px; }
+.recent-table td { padding: 20px 22px; border-bottom: 1px solid #2a3336; font-size: 13px; color: #b4c0c3; }
+.recent-table tbody tr:hover { background: #202729; }
+.recent-date { white-space: nowrap; font-size: 11px!important; font-variant-numeric: tabular-nums; width: 150px; }
+.recent-league { display: inline-flex; gap: 12px; align-items: center; font-weight: 600; color: #d4e88c; text-decoration: none; font-size: 11px; }
+.recent-league span { color: #84928a; font-size: 10px; }
+.recent-table td>small { display: block; font-size: 10px; margin-top: 6px; color: #8e9ca0; }
+.recent-table .recent-team-left, .recent-table .recent-team-heading { text-align: right; }
+.recent-team-left { width: 23%; }
+.recent-table .recent-score-heading { text-align: center; }
+.recent-table .recent-score { text-align: center; white-space: nowrap; width: 120px; }
+.recent-score a { display: inline-flex; align-items: center; justify-content: center; gap: 14px; padding: 8px 13px; min-width: 86px; background: #101618; border: 1px solid #344044; border-radius: 4px; text-decoration: none; color: #a6b3b7; font-variant-numeric: tabular-nums; }
+.recent-score a:hover { border-color: #d4e88c; }
+.recent-score b { font-size: 18px; font-weight: 600; }
+.recent-score i { font-style: normal; color: #64767c; }
+.recent-winner { color: #d4e88c; font-weight: 600; }
+.recent-score a:focus-visible, .recent-league:focus-visible { outline: 2px solid #d4e88c; outline-offset: 3px; }
+@media(max-width:640px) { .recent-matches .panel-title { gap: 15px; } .recent-matches .panel-title h2 { font-size: 18px; } .recent-matches .panel-title p { font-size: 10px; line-height: 1.7; } .recent-matches .text-button { white-space: nowrap; } .recent-table th, .recent-table td { padding-inline: 15px; } }

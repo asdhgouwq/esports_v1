@@ -1,0 +1,20 @@
+.competition-scope { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin: 28px 0 20px; }
+.competition-scope > span { color: #d4e88c; font-size: 12px; font-weight: 500; }
+.competition-scope small { color: #859599; font-size: 10px; }
+.competition-breadcrumb { display: flex; gap: 12px; align-items: center; margin-bottom: 30px; font-size: 11px; color: #8b9c9f; }
+.competition-breadcrumb a { color: #b2c1c4; text-decoration: none; }
+.competition-breadcrumb strong { color: #d4e88c; font-weight: 500; }
+.competition-page-nav { display: flex; align-items: center; gap: 8px; padding: 16px; background: #181c1e; border: 1px solid #30383b; border-radius: 5px; overflow-x: auto; }
+.competition-nav-group { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.competition-page-nav a { display: block; flex-shrink: 0; padding: 9px 16px; font-size: 11px; color: #a8b6b9; text-decoration: none; border: 1px solid transparent; border-radius: 3px; white-space: nowrap; }
+.competition-page-nav > a:first-child { margin-right: auto; }
+.competition-page-nav a:hover { color: #e0e7e8; background: #273032; }
+.competition-page-nav a[aria-current="page"] { background: #d4e88c0b; border-color: #63724b; color: #d4e88c; }
+.competition-page-nav a:focus-visible { outline: 2px solid #d4e88c; outline-offset: -2px; }
+@media (max-width: 640px) {
+  .competition-page-nav { gap: 4px; padding: 12px 10px; }
+  .competition-nav-group { gap: 4px; }
+  .competition-page-nav a { padding: 9px 12px; }
+  .competition-scope { gap: 7px 12px; }
+  .competition-scope small { font-size: 9px; }
+}

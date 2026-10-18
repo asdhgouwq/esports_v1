@@ -1,4 +1,4 @@
-# RIFT.GG — e스포츠 정보 플랫폼
+# dol.gg — e스포츠 정보 플랫폼
 
 > League of Legends 리그 정보, 팀, 선수, 경기 분석을 한눈에 제공하는 플랫폼
 
