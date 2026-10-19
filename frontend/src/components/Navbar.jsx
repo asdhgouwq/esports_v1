@@ -1,3 +1,3 @@
 import { NavLink } from 'react-router-dom';
-const items = [{ to: '/', label: '경기 · 통계' }, { to: '/schedule', label: '일정 · 결과' }, { to: '/standings', label: '팀 순위' }, { to: '/teams', label: '팀' }];
+const items = [{ to: '/', label: '경기 · 통계' }, { to: '/schedule', label: '일정 · 결과' }, { to: '/standings', label: '팀 순위' }, { to: '/teams', label: '팀' }, { to: '/data-connection', label: '데이터 연결' }];
 export default function Navbar() { return <header className="rift-header"><div className="rift-nav-inner"><NavLink to="/" className="rift-brand">dol<span>.gg</span><small>DATE OF LEGENDS</small></NavLink><nav aria-label="주 메뉴">{items.map(({ to, label }) => <NavLink key={to} to={to} end={to === '/'} className={({ isActive }) => isActive ? 'active' : ''}>{label}</NavLink>)}</nav><span className="nav-edition">LEAGUE OF LEGENDS</span></div></header>; }

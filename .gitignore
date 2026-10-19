@@ -6,3 +6,8 @@ dist/
 *.log
 .DS_Store
 Thumbs.db
+backend/.cache/ai-summaries/
+backend/.local/chatgpt-auth/
+backend/.local/leaguepedia/
+backend/.cache/leaguepedia/
+backend/.local/worlds-sync/

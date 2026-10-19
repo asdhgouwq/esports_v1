@@ -15,7 +15,7 @@ export default function MatchCard({ match }) {
 
   return (
     <Link
-      to={`/match/${match.game_id}`}
+      to={`/match/${encodeURIComponent(match.game_id)}`}
       className="block bg-[#1a1a1a] hover:bg-[#212121] border border-white/5 hover:border-[#d4af37]/20 rounded-xl p-4 transition-all duration-200 group"
     >
       <div className="flex flex-col md:flex-row items-center gap-4">

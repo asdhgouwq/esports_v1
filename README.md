@@ -2,6 +2,32 @@
 
 > League of Legends 리그 정보, 팀, 선수, 경기 분석을 한눈에 제공하는 플랫폼
 
+## 최신 작업 상태 · 2026-10-19
+
+현재 실행 앱은 `frontend/`의 React/Vite 화면과 `backend/`의 Express 서버입니다.
+아래의 기존 정적 웹 설계보다 [작업 인수인계 문서](docs/HANDOFF.txt)를 우선 참고하세요.
+
+- 경기 전체 총평과 세트별 AI 요약, 로컬 ChatGPT 구독 연결
+- 실제 선택 순서가 표시되는 토너먼트 밴픽과 선수별 통계
+- Leaguepedia Bot 인증·공유 요청 큐·캐시·요청 제한 대기
+- Supabase 서버 저장 및 2026 월즈 일정·종료 경기 자동 수집
+- 월즈 일정/결과 필터, 세트 상세 연결, 타이포그래피 배너
+
+로컬 실행은 각 폴더에서 `npm ci` 후, `backend/`에서 `npm start`,
+`frontend/`에서 `npm run dev`를 실행합니다.
+설정 파일은 각 폴더의 `.env.example`을 참고해 생성하세요.
+월즈 저장 스키마 변경은 `backend/migrations/20261019_worlds_sync.sql`에 있습니다.
+
+`.env`, 서버 키, Bot Password, ChatGPT 로그인 정보 및 로컬 캐시는 Git에 포함되지 않습니다.
+새 기기에서는 연결을 다시 설정해야 하며, 경기 데이터는 기존 Supabase 프로젝트에 보관됩니다.
+자동 수집은 로컬 서버가 실행되고 Mac이 깨어 있는 동안 동작합니다.
+
+검증: backend 52개 테스트, frontend 14개 테스트 및 프로덕션 빌드 통과.
+
+---
+
+아래 내용은 초기 정적 웹 버전의 설계 기록입니다.
+
 ## 📺 현재 상태
 
 - ✅ UI/UX 완성 (다크/라이트 테마, 반응형)

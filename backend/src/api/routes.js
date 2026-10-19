@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const supabase = require('../config/supabase');
 const dataSyncService = require('../services/dataSync');
+const { localImportGuard } = require('./leaguepediaRoutes');
+const { attachPlayerTeams } = require('../services/playerTeams');
 
 router.get('/health', (req, res) => {
   res.json({ status: 'ok', message: 'dol.gg Backend API is running' });
@@ -61,7 +63,9 @@ router.get('/matches/:gameId/stats', async (req, res) => {
       .eq('game_id', req.params.gameId);
 
     if (error) throw error;
-    res.json({ success: true, data: stats });
+    const match = await supabase.from('matches').select('*').eq('game_id', req.params.gameId).maybeSingle();
+    if (match.error) throw match.error;
+    res.json({ success: true, data: attachPlayerTeams(stats, match.data ? [match.data] : []) });
   } catch (error) {
     console.error(`[API] GET /matches/${req.params.gameId}/stats:`, error.message);
     res.status(500).json({ success: false, error: error.message });
@@ -97,15 +101,12 @@ router.get('/standings', async (req, res) => {
   }
 });
 
-router.post('/sync', async (req, res) => {
+router.post('/sync', localImportGuard(), async (req, res) => {
   try {
-    const { tournament = 'LCK 2024 Summer', limit = 20 } = req.body;
-    console.log(`[API] POST /sync - tournament: ${tournament}, limit: ${limit}`);
-    await dataSyncService.syncMatches(tournament, parseInt(limit, 10));
-    res.json({ success: true, synced: limit, tournament });
+    const { tournament = 'LCK%', limit = 1 } = req.body;
+    res.json(await dataSyncService.syncMatches(tournament, Number(limit)));
   } catch (error) {
-    console.error('[API] POST /sync:', error.message);
-    res.status(500).json({ success: false, error: error.message });
+    res.status(error.status || 500).json({ success: false, code: error.code || 'IMPORT_FAILED', error: error.status ? error.message : '경기 가져오기에 실패했습니다.' });
   }
 });
 

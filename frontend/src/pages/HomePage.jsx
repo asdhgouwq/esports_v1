@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import CompetitionNav from '../components/CompetitionNav';
+import WorldsHub from '../components/WorldsHub';
 import RecentMatches from '../components/RecentMatches';
 import { belongsToCompetition } from '../config/competitions';
 import { useMatchData } from '../hooks/useMatchData';
@@ -36,10 +37,11 @@ export default function HomePage({ competition: selectedCompetition, group }) {
   }, [filtered]);
   const pages = Math.max(1, Math.ceil(filtered.length / 12)), current = Math.min(page, pages);
   const ready = !loading && !error;
-  return <div className="stats-dashboard">
+  return <div className={`stats-dashboard${competitionId === 'worlds' ? ' worlds-page' : ''}`}>
     {selectedCompetition && <nav className="competition-breadcrumb" aria-label="현재 위치"><Link to="/">메인</Link><span>/</span><span>{group.label}</span><span>/</span><strong>{selectedCompetition.label}</strong></nav>}
-    <div className="dashboard-heading"><div><div className="eyebrow">{selectedCompetition ? group.subtitle : 'LEAGUE OF LEGENDS / ESPORTS DATABASE'}</div><h1>{selectedCompetition ? <>{selectedCompetition.label} <span>경기 · 통계</span></> : <>경기의 흐름을 읽는 <span>데이터.</span></>}</h1><p>{selectedCompetition ? `${selectedCompetition.description}의 시즌별 경기 결과와 밴픽 통계를 살펴보세요.` : '프로 경기 결과부터 밴픽까지, 리그 오브 레전드의 모든 순간을 살펴보세요.'}</p></div><div className="database-label"><span /> {selectedCompetition ? selectedCompetition.label : 'MATCH EXPLORER'}<small>Leaguepedia 기반 경기 데이터</small></div></div>
+    {competitionId !== 'worlds' && <div className="dashboard-heading"><div><div className="eyebrow">{selectedCompetition ? group.subtitle : 'LEAGUE OF LEGENDS / ESPORTS DATABASE'}</div><h1>{selectedCompetition ? <>{selectedCompetition.label} <span>경기 · 통계</span></> : <>경기의 흐름을 읽는 <span>데이터.</span></>}</h1><p>{selectedCompetition ? `${selectedCompetition.description}의 시즌별 경기 결과와 밴픽 통계를 살펴보세요.` : '프로 경기 결과부터 밴픽까지, 리그 오브 레전드의 모든 순간을 살펴보세요.'}</p></div><div className="database-label"><span /> {selectedCompetition ? selectedCompetition.label : 'MATCH EXPLORER'}<small>Leaguepedia 기반 경기 데이터</small></div></div>}
     <CompetitionNav selected={competitionId} />
+    {competitionId === 'worlds' && <WorldsHub compact />}
     {!selectedCompetition ? <RecentMatches matches={matches} loading={loading} error={error} refetch={refetch} /> : <>
     <div className="competition-scope"><span>{selectedCompetition ? `${selectedCompetition.label} · ${selectedCompetition.description}` : '전체 리그 · 국제 대회'}</span><small>불러온 최근 최대 200경기 내에서 조회</small></div>
     <div className="dashboard-tabs"><span className="selected">경기 개요</span>{!selectedCompetition && <><Link to="/schedule">일정 · 결과 ↗</Link><Link to="/standings">팀 순위 ↗</Link></>}</div>
@@ -49,7 +51,7 @@ export default function HomePage({ competition: selectedCompetition, group }) {
       <Metric label="평균 경기 시간" value={ready ? stats.average : '—'} unit="MIN : SEC" detail="경기 시간이 있는 데이터 기준" />
       <Metric label="블루 진영 승률" value={ready && stats.blue !== null ? `${stats.blue}%` : '—'} unit="BLUE SIDE" detail="승패가 기록된 경기 기준" />
     </section>
-    <div className="dashboard-columns"><section className="results-panel">
+    <div className="dashboard-columns"><section className="results-panel" id={competitionId === 'worlds' ? 'worlds-game-records' : undefined}>
       <div className="panel-title"><div><span className="eyebrow">MATCH DATABASE</span><h2>경기 탐색 <span>{ready ? filtered.length : '—'}</span></h2></div><button className="text-button" onClick={refetch} disabled={loading}>↻ 새로고침</button></div>
       <div className="match-filters"><label className="search-field"><span aria-hidden="true">⌕</span><input aria-label="팀 또는 대회 검색" placeholder="팀 또는 대회 검색" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} /></label><select aria-label="대회 필터" value={activeTournament} onChange={(e) => { setTournament(e.target.value); setPage(1); }}><option value="">전체 시즌 · 대회</option>{tournaments.map((t) => <option key={t}>{t}</option>)}</select><select aria-label="경기 정렬" value={sort} onChange={(e) => { setSort(e.target.value); setPage(1); }}><option value="newest">최신 경기순</option><option value="longest">경기 시간순</option></select></div>
       <div className="table-scroll"><table className="match-table"><thead><tr><th>날짜 / 대회</th><th>BLUE SIDE</th><th>결과</th><th>RED SIDE</th><th>시간 / 패치</th><th><span className="sr-only">상세</span></th></tr></thead><tbody>{ready && filtered.slice((current - 1) * 12, current * 12).map((m) => <tr key={m.game_id}>

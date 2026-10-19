@@ -6,6 +6,7 @@ import SchedulePage from './pages/SchedulePage';
 import StandingsPage from './pages/StandingsPage';
 import TeamsPage from './pages/TeamsPage';
 import MatchDetailPage from './pages/MatchDetailPage';
+import DataConnectionPage from './pages/DataConnectionPage';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
               <Route path="/standings" element={<StandingsPage />} />
               <Route path="/teams" element={<TeamsPage />} />
               <Route path="/match/:gameId" element={<MatchDetailPage />} />
+              <Route path="/data-connection" element={<DataConnectionPage />} />
             </Routes>
           </main>
         </div>

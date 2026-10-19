@@ -24,18 +24,7 @@
 .match-section-empty p { font-size: 11px; margin-top: 12px; }
 .match-set-overview { display: flex; flex-wrap: wrap; gap: 24px; padding: 16px 0; font-size: 11px; color: #93a4a8; }
 .match-set-overview strong { color: #d4e88c; font-weight: 500; margin-left: 10px; }
-.match-draft-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 10px 0 28px; }
-.match-draft-line { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
-.match-draft-line>span { width: 40px; color: #93a4a8; font-size: 9px; }
-.match-draft-line img { width: 32px; height: 32px; border-radius: 3px; }
-.match-draft-line small { color: #93a4a8; font-size: 10px; }
 .match-player-tables { display: grid; gap: 18px; }
 .match-stats-heading { font-size: 14px; margin: 24px 0 16px; }
-.match-summary-score { display: flex; justify-content: center; gap: 40px; align-items: center; padding: 25px 0; }
-.match-summary-score strong { font-size: 20px; }
-.match-summary-score>span { font-size: 30px; color: #d4e88c; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.match-summary-sets { display: grid; gap: 8px; }
-.match-summary-sets button { display: flex; align-items: center; gap: 24px; padding: 16px; background: #202729; border: 1px solid #354044; color: #9dacae; text-align: left; cursor: pointer; }
-.match-summary-sets button strong { color: #d4e88c; font-size: 12px; font-weight: 500; }
-.match-summary-sets button small { margin-left: auto; font-size: 10px; }
-@media(max-width: 700px) { .match-detail-page { padding: 24px 16px; } .match-series-header { padding: 25px 15px; } .match-series-header h1 span { margin: 0 10px; } .match-preview-grid,.match-draft-grid { grid-template-columns: 1fr; } .match-tab-panel { padding: 20px 16px; } .match-summary-score { gap: 18px; } .match-summary-score strong { font-size: 15px; } }
+@media(max-width: 700px) { .match-detail-page { padding: 24px 16px; } .match-series-header { padding: 25px 15px; } .match-series-header h1 span { margin: 0 10px; } .match-preview-grid { grid-template-columns: 1fr; } .match-tab-panel { padding: 20px 16px; } }
+@media(max-width: 700px) { .match-section-tabs button { min-width: 64px; padding: 12px 8px; } .match-section-tabs button small { display: block; margin: 4px 0 0; } }

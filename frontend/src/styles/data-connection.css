@@ -1,0 +1,35 @@
+.data-connection-page { max-width: 1240px; padding: 48px 28px 80px; margin: auto; color: #dce6d8; }
+.data-connection-title h1 { font-size: clamp(27px, 4vw, 42px); font-weight: 650; margin: 14px 0; letter-spacing: -.05em; }
+.data-connection-title h1 > span { color: #d4e88c; }
+.data-connection-title p { color: #a3b39e; font-size: 13px; line-height: 1.9; }
+.data-connection-badges { display: flex; gap: 8px; flex-wrap: wrap; margin: 21px 0 34px; }
+.data-connection-badges span { border: 1px solid #43533c; color: #bdceaa; font-size: 10px; padding: 6px 10px; border-radius: 3px; }
+.data-connection-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 26px; }
+.data-setup-guide { background: #1c241e; border: 1px solid #3c4c36; padding: 28px; border-radius: 6px; }
+.data-setup-guide h2 { font-size: 20px; margin: 12px 0 24px; }
+.data-setup-guide ol { padding: 0 0 0 22px; }
+.data-setup-guide li { padding-left: 8px; margin: 0 0 23px; color: #cee1ac; }
+.data-setup-guide strong { font-size: 13px; }
+.data-setup-guide p, .data-connect-card p, .data-import-result p { font-size: 12px; line-height: 1.9; color: #a6b79f; margin: 10px 0; overflow-wrap: anywhere; }
+.data-setup-guide a, .data-docs-link { color: #d4e88c; text-decoration: underline; text-underline-offset: 3px; }
+.data-docs-link { display: inline-block; font-size: 11px; margin-top: 8px; }
+.data-connection-page code { color: #d5dfa8; font-size: 11px; }
+.data-setup-guide q { color: #c7d4bc; }
+.data-connection-forms { display: flex; flex-direction: column; gap: 18px; }
+.data-connect-card { border: 1px solid #3c4c36; background: #161d18; border-radius: 6px; padding: 24px; }
+.data-card-heading { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 20px; }
+.data-card-heading h2 { font-size: 15px; font-weight: 600; }
+.data-card-heading > span { color: #bfce99; font-size: 10px; flex-shrink: 0; }
+.data-connect-card label { display: block; font-size: 11px; color: #b6c3ac; margin: 14px 0; }
+.data-connect-card input { display: block; width: 100%; box-sizing: border-box; font: inherit; font-size: 13px; color: #e1ead6; background: #101711; border: 1px solid #45543c; border-radius: 4px; padding: 12px; margin-top: 8px; }
+.data-connect-card input::placeholder { color: #718169; }
+.data-connect-card button, .data-import-result a { display: inline-block; width: 100%; text-align: center; background: #d4e88c; color: #192414; border: 1px solid #d4e88c; border-radius: 4px; padding: 12px 16px; font-size: 12px; font-weight: 600; cursor: pointer; margin-top: 9px; }
+.data-connect-card button:disabled { opacity: .4; cursor: default; }
+.data-connect-card small { display: block; color: #809378; font-size: 10px; line-height: 1.9; margin-top: 12px; }
+.data-connection-page :is(a, button, input):focus-visible { outline: 2px solid #e0efb2; outline-offset: 4px; }
+.data-connection-message { padding: 18px; background: #202c1a; border: 1px solid #586b43; font-size: 12px; line-height: 1.8; border-radius: 4px; margin-top: 22px; }
+.data-import-result { border: 1px solid #586b43; background: #1b271b; padding: 24px; border-radius: 5px; margin-top: 24px; }
+.data-import-result h2 { font-size: 17px; margin: 12px 0; line-height: 1.7; }
+.data-import-result a { width: auto; }
+.data-import-result.failed { border-color: #926b4d; background: #282218; }
+@media(max-width: 780px) { .data-connection-grid { grid-template-columns: 1fr; } .data-connection-page { padding: 28px 18px 60px; } .data-setup-guide, .data-connect-card { padding: 22px; } }
