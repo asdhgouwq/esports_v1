@@ -1,5 +1,4 @@
 import { useMemo } from 'react';
-import { Link } from 'react-router-dom';
 import { useMatchData } from '../hooks/useMatchData';
 import { LoadingSpinner, ErrorMessage, EmptyState, SectionTitle } from '../components/ui';
 
@@ -7,7 +6,7 @@ export default function TeamsPage() {
   const { matches, loading, error } = useMatchData({ limit: 100 });
 
   const teams = useMemo(() => {
-    const teamMap = {};
+    const teamMap = Object.create(null);
     matches.forEach(({ team1, team2, win_team, loss_team }) => {
       [team1, team2].forEach((team) => {
         if (!team) return;

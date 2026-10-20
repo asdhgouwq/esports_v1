@@ -1,12 +1,11 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, API_URL } from '../lib/api';
 import '../styles/chatgpt-connection.css';
 
-const ChatGptContext = createContext(null);
+import {ChatGptContext} from './appContexts';
 
 export function ChatGptProvider({ children }) {
   const [account, setAccount] = useState({ mode: 'chatgpt', loading: true, profiles: [] });
-  const [models, setModels] = useState([]);
   const [message, setMessage] = useState('');
   const [connectionError, setConnectionError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -30,15 +29,20 @@ export function ChatGptProvider({ children }) {
       if (state.connected && state.planEnabled) {
         try {
           const data = await api.chatGptModels();
-          if (current()) { setModels(data.models); setAccount({ ...data, loading: false }); }
+          if (current()) { setAccount({ ...data, loading: false }); }
         } catch (error) { if (current()) setConnectionError(error.message); }
-      } else setModels([]);
+      }
     } catch (error) {
       if (current()) { setAccount((previous) => ({ ...previous, loading: false, unavailable: true })); setConnectionError(error.message); }
     }
   }, []);
 
-  useEffect(() => { alive.current = true; refresh(); return () => { alive.current = false; refreshVersion.current++; }; }, [refresh]);
+  useEffect(() => {
+    alive.current = true;
+    let active = true;
+    queueMicrotask(() => { if (active) void refresh(); });
+    return () => { active = false; alive.current = false; };
+  }, [refresh]);
   useEffect(() => {
     if (!signingIn) return;
     const timer = window.setInterval(refresh, 2500);
@@ -81,18 +85,11 @@ export function ChatGptProvider({ children }) {
     try { await api.chatGptAcknowledge(); } catch (error) { setMessage(error.message); }
   }
 
-  return <ChatGptContext.Provider value={{ ...account, models, message: connectionError || message, busy, signingIn, loginUrl, revision, refresh, signIn,
-    selectModel: (slug) => change(() => api.chatGptSelectModel(slug)),
+  return <ChatGptContext.Provider value={{ ...account, message: connectionError || message, busy, signingIn, loginUrl, revision, refresh, signIn,
     selectAccount: (id) => change(() => api.chatGptSelectAccount(id)),
     disconnect: () => change(() => api.chatGptDisconnect()),
   }}>
     {children}
     {account.welcomePending && <div className="chatgpt-welcome-backdrop"><section className="chatgpt-welcome" role="dialog" aria-modal="true" aria-labelledby="chatgpt-welcome-title" aria-describedby="chatgpt-welcome-description"><span className="chatgpt-plan-tag">ChatGPT</span><h2 id="chatgpt-welcome-title">ChatGPT 구독이 연결됐어요</h2><p id="chatgpt-welcome-description">이제 dol.gg의 AI 요약에 ChatGPT 구독 한도를 사용합니다. 앱별 사용량과 허용 범위는 ChatGPT 설정에서 관리할 수 있어요.</p><a href="https://chatgpt.com/settings/usage" target="_blank" rel="noreferrer">사용량 관리 ↗</a><button type="button" autoFocus onClick={acknowledge}>확인</button></section></div>}
   </ChatGptContext.Provider>;
-}
-
-export function useChatGpt() {
-  const value = useContext(ChatGptContext);
-  if (!value) throw new Error('ChatGptProvider is required');
-  return value;
 }

@@ -1,9 +1,9 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const ddragonService = require('./src/services/ddragon');
 const routes = require('./src/api/routes');
-const { createAiSummaryService } = require('./src/services/aiSummary');
+const { createAiSummaryService, DEFAULT_MODEL } = require('./src/services/aiSummary');
+const { localRequestGuard, localFrontendOrigins, requestErrorHandler } = require('./src/middleware/localRequest');
 const { createAiSummaryRouter } = require('./src/api/aiSummaryRoutes');
 const supabase = require('./src/config/supabase');
 const { createChatGptAuth } = require('./src/services/chatgptAuth');
@@ -16,6 +16,9 @@ const dataSync = require('./src/services/dataSync');
 const { createMatchTimelineService } = require('./src/services/matchTimeline');
 const { createMatchTimelineRouter } = require('./src/api/matchTimelineRoutes');
 const timeline = createMatchTimelineService();
+const {createPlayerLoadoutService}=require('./src/services/playerLoadouts');
+const {createPlayerLoadoutRouter}=require('./src/api/playerLoadoutRoutes');
+const loadouts=createPlayerLoadoutService({db:supabase,source:leaguepedia});
 
 const { createWorldsSync } = require('./src/services/worldsSync');
 const { createWorldsRouter } = require('./src/api/worldsRoutes');
@@ -24,24 +27,25 @@ const worlds = createWorldsSync({ db: supabase, source: leaguepedia, year: Numbe
 const app = express();
 const port = process.env.PORT || 3000;
 const frontendOrigin = process.env.FRONTEND_URL || 'http://127.0.0.1:5173';
-const auth = createChatGptAuth({ fixedModel: 'gpt-6-luna', callbackUrl: `http://127.0.0.1:${port}/auth/callback` });
+const auth = createChatGptAuth({ fixedModel: DEFAULT_MODEL, callbackUrl: `http://127.0.0.1:${port}/auth/callback` });
 
-app.use(cors({ origin: [frontendOrigin, 'http://localhost:5173'], credentials: true }));
-app.use(express.json());
-
-ddragonService.init().then(() => {
-  console.log('[Express] DataDragon initialization finished.');
-});
+app.disable('x-powered-by');
+app.use(localRequestGuard(frontendOrigin));
+app.use(cors({ origin: localFrontendOrigins(frontendOrigin), credentials: true }));
+app.use(express.json({ limit: '16kb' }));
 
 app.use('/api', routes);
 app.use('/api', createMatchTimelineRouter(timeline));
+app.use('/api', createPlayerLoadoutRouter(loadouts));
 app.use('/api', createWorldsRouter(worlds, { frontendOrigin }));
 app.use('/api', createLeaguepediaRouter(leaguepedia, dataSync, { frontendOrigin }));
 app.use('/api', createMatchDraftRouter(createMatchDraftService({ db: supabase, loadDraft: async (gameId) => { const saved = await supabase.from('game_drafts').select('raw_draft').eq('game_id', gameId).maybeSingle(); return saved.data ? [saved.data.raw_draft] : leaguepedia.getDraft(gameId); } })));
 app.use(createChatGptRouter(auth, { frontendOrigin }));
 app.use('/api', createAiSummaryRouter(createAiSummaryService({ db: supabase, getTimeline: gameId => timeline.getTimeline(gameId),
   getInferenceContext: process.env.AI_AUTH_MODE === 'api_key' ? undefined : () => auth.summaryContext(),
-})));
+}), { frontendOrigin }));
+
+app.use(requestErrorHandler);
 
 app.listen(port, '127.0.0.1', () => {
   console.log(`[Express] Server running on port ${port}`);

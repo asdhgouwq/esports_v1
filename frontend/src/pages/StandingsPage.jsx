@@ -6,7 +6,7 @@ export default function StandingsPage() {
   const { matches, loading, error } = useMatchData({ limit: 100 });
 
   const standings = useMemo(() => {
-    const teamMap = {};
+    const teamMap = Object.create(null);
 
     matches.forEach((match) => {
       const { team1, team2, win_team, loss_team } = match;

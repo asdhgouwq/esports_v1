@@ -6,18 +6,8 @@ function createChatGptRouter(auth, { frontendOrigin = 'http://127.0.0.1:5173' } 
   const router = express.Router();
   const expected = new URL(frontendOrigin);
   if (expected.protocol !== 'http:' || !['127.0.0.1', 'localhost'].includes(expected.hostname)) throw new Error('ChatGPT login is local-only');
-  const origins = new Set([expected.origin, `${expected.protocol}//${expected.hostname === '127.0.0.1' ? 'localhost' : '127.0.0.1'}:${expected.port}`]);
   const launches = new Map();
-  function guard(req, res, next) {
-    res.set({ 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer', 'X-Content-Type-Options': 'nosniff' });
-    const local = ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress);
-    const allowedHost = [`127.0.0.1:${req.socket.localPort}`, `localhost:${req.socket.localPort}`].includes(req.headers.host);
-    const origin = req.headers.origin;
-    if (!local || !allowedHost || (origin && !origins.has(origin)) || (req.method === 'POST' && (!origin || !req.is('application/json')))) {
-      return res.status(403).json({ error: '이 기기의 dol.gg 화면에서 연결을 시작해 주세요.' });
-    }
-    next();
-  }
+  const guard = require('../middleware/localRequest').localRequestGuard(frontendOrigin);
   router.use('/api/chatgpt', guard);
   const handle = (action) => async (req, res) => {
     try { res.json(await action(req)); }

@@ -3,112 +3,18 @@ import { useParams, Link } from 'react-router-dom';
 import '../styles/match-detail.css';
 import { useMatchStats } from '../hooks/useMatchStats';
 import { useMatchData } from '../hooks/useMatchData';
-import { useDDragon } from '../contexts/DDragonContext';
-import { getChampionImageUrl, getItemImageUrl, formatDate, formatGameLength } from '../lib/utils';
+import { useDDragon } from '../contexts/appContexts';
+import { formatDate, formatGameLength } from '../lib/utils';
 import { LoadingSpinner, ErrorMessage } from '../components/ui';
 import MatchSummary from '../components/MatchSummary';
 import AiMatchSummary from '../components/AiMatchSummary';
 import TournamentDraft from '../components/TournamentDraft';
 import MatchTimeline from '../components/MatchTimeline';
+import PlayerScoreboard from '../components/PlayerScoreboard';
 import {MatchAttribution} from '../components/DataAttribution';
 import { useMatchDraft } from '../hooks/useMatchDraft';
 
-const ROLE_ORDER = ['Top', 'Jungle', 'Mid', 'Bot', 'Support'];
 const MATCH_TABS = [{ id: 'preview', label: 'Preview', detail: '경기 전' }, ...Array.from({ length: 5 }, (_, i) => ({ id: `set-${i + 1}`, label: `${i + 1}세트` })), { id: 'summary', label: '요약', detail: '경기 총평' }];
-
-function PlayerRow({ player, version, isWinner }) {
-  const items = [player.item0, player.item1, player.item2, player.item3, player.item4, player.item5].filter(Boolean);
-
-  return (
-    <tr className={`border-b border-white/5 hover:bg-white/3 transition-colors ${isWinner ? 'bg-green-900/5' : ''}`}>
-      <td className="px-3 py-2.5">
-        <div className="flex items-center gap-2">
-          <img
-            src={getChampionImageUrl(version, player.champion)}
-            alt={player.champion}
-            className="w-8 h-8 rounded-full border border-white/10"
-            onError={(e) => { e.target.style.display = 'none'; }}
-          />
-          <div>
-            <div className="text-white text-sm font-semibold">{player.name}</div>
-            <div className="text-gray-500 text-xs">{player.champion}</div>
-          </div>
-        </div>
-      </td>
-      <td className="px-3 py-2.5 text-center">
-        <span className="text-xs text-gray-400 bg-white/5 px-2 py-0.5 rounded">{player.role}</span>
-      </td>
-      <td className="px-3 py-2.5 text-center font-mono text-sm">
-        <span className="text-green-400">{player.kills}</span>
-        <span className="text-gray-600 mx-1">/</span>
-        <span className="text-red-400">{player.deaths}</span>
-        <span className="text-gray-600 mx-1">/</span>
-        <span className="text-blue-400">{player.assists}</span>
-      </td>
-      <td className="px-3 py-2.5 text-center text-sm text-yellow-300/80 font-mono">
-        {player.gold ? `${(player.gold / 1000).toFixed(1)}k` : '-'}
-      </td>
-      <td className="px-3 py-2.5 text-center text-sm text-gray-300 font-mono">{player.cs ?? '-'}</td>
-      <td className="px-3 py-2.5 text-center text-sm text-red-300/70 font-mono">
-        {player.damage_to_champions ? `${(player.damage_to_champions / 1000).toFixed(1)}k` : '-'}
-      </td>
-      <td className="px-3 py-2.5">
-        <div className="flex gap-1">
-          {items.map((itemId, i) => (
-            <img
-              key={i}
-              src={getItemImageUrl(version, itemId)}
-              alt={itemId}
-              title={itemId}
-              className="w-6 h-6 rounded border border-white/10"
-              onError={(e) => { e.target.style.display = 'none'; }}
-            />
-          ))}
-        </div>
-      </td>
-    </tr>
-  );
-}
-
-function TeamTable({ players, teamName, winTeam, version }) {
-  const isWinner = winTeam === teamName;
-  const sorted = [...players].sort(
-    (a, b) => ROLE_ORDER.indexOf(a.role) - ROLE_ORDER.indexOf(b.role)
-  );
-
-  return (
-    <div className="bg-[#1a1a1a] rounded-xl border border-white/5 overflow-hidden">
-      <div className={`px-4 py-2.5 flex items-center gap-2 border-b border-white/5 ${isWinner ? 'bg-green-900/10' : ''}`}>
-        <span className={`font-bold text-sm ${isWinner ? 'text-green-400' : 'text-gray-300'}`}>{teamName}</span>
-        {isWinner && (
-          <span className="text-xs bg-green-400/10 text-green-400 border border-green-400/20 px-2 py-0.5 rounded-full">
-            VICTORY
-          </span>
-        )}
-      </div>
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="text-gray-600 text-xs border-b border-white/5">
-              <th className="text-left px-3 py-2">Player</th>
-              <th className="px-3 py-2">Role</th>
-              <th className="px-3 py-2">KDA</th>
-              <th className="px-3 py-2">Gold</th>
-              <th className="px-3 py-2">CS</th>
-              <th className="px-3 py-2">Dmg</th>
-              <th className="text-left px-3 py-2">Items</th>
-            </tr>
-          </thead>
-          <tbody>
-            {sorted.map((p, i) => (
-              <PlayerRow key={i} player={p} version={version} isWinner={isWinner} />
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
 
 export default function MatchDetailPage() {
   const { gameId } = useParams();
@@ -117,7 +23,7 @@ export default function MatchDetailPage() {
 
 function MatchContent({ gameId }) {
   const [tab, setTab] = useState('preview');
-  const { version, champions } = useDDragon();
+  const { version, champions, equipment } = useDDragon();
   const { matches, loading, error } = useMatchData({ limit: 200, expand_series: 'true' });
   const match = matches.find((item) => item.game_id === gameId);
   const games = useMemo(() => {
@@ -175,7 +81,7 @@ function MatchContent({ gameId }) {
           {statsLoading && <LoadingSpinner message="선수 기록을 불러오고 있습니다." />}
           {statsError && <ErrorMessage message="선수 기록을 불러오지 못했습니다." />}
           {!statsLoading && !statsError && !stats.length && <div className="match-section-empty">선수 기록이 아직 연결되지 않았습니다.</div>}
-          {!statsLoading && !statsError && stats.length > 0 && <div className="match-player-tables">{stats.some((player) => player.team) ? [selectedGame.team1, selectedGame.team2].map((team) => <TeamTable key={team} teamName={team} players={stats.filter((player) => player.team === team)} winTeam={selectedGame.win_team} version={version} />) : <TeamTable players={stats} teamName="전체 선수 기록 · 팀 정보 미확인" version={version} />}</div>}
+          {!statsLoading && !statsError && stats.length > 0 && <PlayerScoreboard key={selectedGame.game_id} game={selectedGame} players={stats} version={version} champions={champions} equipment={equipment} />}
         </>}
       </>}
       {tab === 'summary' && <MatchSummary games={games} match={match} gameId={gameId} loading={loading} error={error} onSelectSet={(index) => {

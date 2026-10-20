@@ -1,4 +1,4 @@
-import { Fragment, useState } from 'react';
+import { useState } from 'react';
 import { draftSequence, PICK_TURNS, teamDraft } from '../lib/draft';
 import '../styles/tournament-draft.css';
 
@@ -29,23 +29,21 @@ function Portrait({ champion, version, ban = false }) {
 function SequenceRow({ team, kind, side, version, ordered, firstPick, hasRecords }) {
   const picks = kind === 'pick';
   const entries = picks ? team.picks : team.bans.map((champion) => ({ champion }));
-  const breaks = picks ? side === 'blue' ? [1, 3] : [2, 4] : [3];
+  const breaks = picks ? side === 'blue' ? [1, 3] : [2, 3, 4] : [3];
   const grouped = ordered || !hasRecords;
   const teamName = team.team || (side === 'blue' ? '블루 팀' : '레드 팀');
   return <div className="draft-sequence-row">
-    <div className="draft-row-label">{picks ? 'Picks' : 'Bans'}{picks && firstPick && <span className="draft-first-pick" aria-label="선픽">1st</span>}</div>
+    <div className="draft-row-label">{picks ? 'Picks' : 'Bans'}</div>
     <ol className={`draft-sequence-list draft-${kind}-sequence${grouped ? ' is-grouped' : ''}`} data-side={side} aria-label={`${teamName} ${picks ? '픽' : '밴'}${ordered ? ' 선택 순서' : ' 목록 · 순서 미확인'}`}>
       {entries.map((entry, index) => {
         const champion = entry.champion;
         const turn = ordered && picks ? PICK_TURNS[side][index] : null;
         const detail = [champion?.name || '기록 없음', turn ? `전체 ${turn}번째 픽` : ordered ? `팀의 ${index + 1}번째 밴` : '순서 미확인', entry.role, entry.player].filter(Boolean).join(' · ');
-        return <Fragment key={index}>
-          {grouped && breaks.includes(index) && <li className="draft-sequence-separator" role="presentation"><span aria-hidden="true">|</span></li>}
-          <li className="draft-champion-slot" title={detail} aria-label={detail}>
-            <span className="draft-champion-frame"><Portrait key={`${champion?.id || 'empty'}-${version}`} champion={champion} version={version} ban={!picks} />{turn && champion && <span className={`draft-turn${turn === 1 ? ' is-first' : ''}`} aria-hidden="true">{turn}</span>}</span>
+        return <li key={index} className="draft-champion-slot" title={detail} aria-label={detail}>
+            {grouped && breaks.includes(index) && <span className="draft-sequence-separator" aria-hidden="true">|</span>}
+            <span className="draft-champion-frame"><Portrait key={`${champion?.id || 'empty'}-${version}`} champion={champion} version={version} ban={!picks} />{picks && firstPick && index === 0 && champion && <span className="draft-turn is-first" aria-hidden="true">1st</span>}</span>
             <span className="draft-champion-name">{champion?.name || '미확인'}</span>
-          </li>
-        </Fragment>;
+          </li>;
       })}
     </ol>
   </div>;
@@ -77,6 +75,6 @@ export default function TournamentDraft({ game, draft, players = [], version, ch
       <TeamSequence team={blue} side="blue" version={version} ordered={sequence.ordered} firstPick={sequence.firstPickSide === 'blue' && Boolean(blue.picks[0].champion)} hasRecords={hasRecords} />
       <TeamSequence team={red} side="red" version={version} ordered={sequence.ordered} firstPick={false} hasRecords={hasRecords} />
     </div>
-    <footer className="draft-footnote"><span className="draft-order-legend"><b>1st</b> 선픽 <i>|</i> 단계 구분</span><p>{loading ? '실제 밴픽 선택 순서를 확인하고 있어요.' : sequence.ordered ? '숫자는 양 팀을 합친 픽 순서입니다. 각 팀은 왼쪽부터 읽어주세요.' : hasRecords ? '선택 순서가 확인되지 않아 최종 목록을 표시합니다.' : '밴픽 기록이 연결되면 선택 순서가 표시됩니다.'}</p></footer>
+    <footer className="draft-footnote"><span className="draft-order-legend"><b>1st</b> 선픽 <i>|</i> 단계 구분</span><p>{loading ? '실제 밴픽 선택 순서를 확인하고 있어요.' : sequence.ordered ? '1st는 전체 첫 번째 픽입니다. 각 팀은 왼쪽부터 읽어주세요.' : hasRecords ? '선택 순서가 확인되지 않아 최종 목록을 표시합니다.' : '밴픽 기록이 연결되면 선택 순서가 표시됩니다.'}</p></footer>
   </section>;
 }

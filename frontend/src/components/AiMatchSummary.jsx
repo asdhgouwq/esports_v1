@@ -1,7 +1,7 @@
 import { useAiSummary } from '../hooks/useAiSummary';
 import '../styles/ai-summary.css';
 import ChatGptConnection from './ChatGptConnection';
-import { useChatGpt } from '../contexts/ChatGptContext';
+import { useChatGpt } from '../contexts/appContexts';
 
 export default function AiMatchSummary({ gameId, scope = 'series', available, loading, dataError, setNumber }) {
   const auth = useChatGpt();

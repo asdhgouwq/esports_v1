@@ -1,19 +1,8 @@
 const express = require('express');
 const { LeaguepediaError } = require('../services/leaguepedia');
 
-function localImportGuard(frontendOrigin = process.env.FRONTEND_URL || 'http://127.0.0.1:5173') {
-  const expected = new URL(frontendOrigin);
-  if (expected.protocol !== 'http:' || !['127.0.0.1', 'localhost'].includes(expected.hostname)) throw new Error('Leaguepedia connection is local-only');
-  const origins = new Set([expected.origin, `http://${expected.hostname === '127.0.0.1' ? 'localhost' : '127.0.0.1'}:${expected.port}`]);
-  return (req, res, next) => {
-    res.set({ 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' });
-    const local = ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress);
-    const host = [`127.0.0.1:${req.socket.localPort}`, `localhost:${req.socket.localPort}`].includes(req.headers.host);
-    const origin = req.headers.origin;
-    if (!local || !host || (origin && !origins.has(origin)) || (req.method === 'POST' && (!origin || !req.is('application/json')))) return res.status(403).json({ error: '이 기기의 dol.gg 화면에서 데이터 연결을 진행해 주세요.' });
-    next();
-  };
-}
+const { localRequestGuard } = require('../middleware/localRequest');
+const localImportGuard = (origin = process.env.FRONTEND_URL || 'http://127.0.0.1:5173') => localRequestGuard(origin);
 function createLeaguepediaRouter(source, sync, options) {
   const router = express.Router();
   router.use('/leaguepedia', localImportGuard(options?.frontendOrigin));

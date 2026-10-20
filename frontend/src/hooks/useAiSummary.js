@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
-import { useChatGpt } from '../contexts/ChatGptContext';
+import { useChatGpt } from '../contexts/appContexts';
 
 export function useAiSummary(gameId, scope, enabled) {
   const auth = useChatGpt();

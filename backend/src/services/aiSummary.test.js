@@ -223,7 +223,7 @@ test('HTTP routes expose the unavailable-key state without fabricating an AI rep
   const value = await response.json();
   assert.equal(value.state, 'not_configured');
   assert.equal(value.report, undefined);
-  const invalid = await fetch(`${base}/api/matches/g1/ai-summary?scope=invalid`, { method: 'POST' });
+  const invalid = await fetch(`${base}/api/matches/g1/ai-summary?scope=invalid`, { method: 'POST', headers: { Origin: 'http://127.0.0.1:5173', 'Content-Type': 'application/json' }, body: '{}' });
   assert.equal(invalid.status, 400);
 });
 

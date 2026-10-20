@@ -15,16 +15,6 @@ export function getChampionImageUrl(version, championName) {
   return `${DDRAGON_BASE}/cdn/${version}/img/champion/${finalId}.png`;
 }
 
-export function getItemImageUrl(version, itemId) {
-  if (!itemId || !version) return '';
-  return `${DDRAGON_BASE}/cdn/${version}/img/item/${itemId}.png`;
-}
-
-export function getRuneImageUrl(iconPath) {
-  if (!iconPath) return '';
-  return `${DDRAGON_BASE}/cdn/img/${iconPath}`;
-}
-
 export function formatGameLength(minutes) {
   if (!minutes) return '--:--';
   const totalSeconds = Math.round(Number(minutes) * 60);

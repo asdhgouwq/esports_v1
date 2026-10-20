@@ -5,7 +5,7 @@ import WorldsHub from '../components/WorldsHub';
 import RecentMatches from '../components/RecentMatches';
 import { belongsToCompetition } from '../config/competitions';
 import { useMatchData } from '../hooks/useMatchData';
-import { useDDragon } from '../contexts/DDragonContext';
+import { useDDragon } from '../contexts/appContexts';
 import { getChampionImageUrl, formatGameLength } from '../lib/utils';
 import '../styles/dashboard.css';
 

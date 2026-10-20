@@ -1,5 +1,5 @@
 import {Link} from 'react-router-dom';
-import {CC_LICENSE} from '../components/DataAttribution';
+import {CC_LICENSE} from '../lib/dataSources';
 import '../styles/data-attribution.css';
 const External=({href,children})=><a href={href} target="_blank" rel="noreferrer">{children} ↗</a>;
 export default function DataSourcesPage() {

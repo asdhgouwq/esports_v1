@@ -8,10 +8,27 @@ import '../styles/worlds.css';
 export default function WorldsHub({ compact = false }) {
   const [data, setData] = useState(null), [error, setError] = useState(''), [busy, setBusy] = useState(false);
   const [filter, setFilter] = useState('all'), [search, setSearch] = useState(''), [page, setPage] = useState(1);
-  const load = useCallback(async () => { try { setData(await api.getWorlds()); setError(''); } catch(e) { setError(e.message); } }, []);
-  useEffect(() => { let active = true; api.getWorlds().then(value => { if (active) setData(value); }).catch(e => { if (active) setError(e.message); }); return () => { active = false; }; }, []);
-  useEffect(() => { const timer = setInterval(load, data?.running ? 3000 : 30000); return () => clearInterval(timer); }, [load, data?.running]);
-  const sync = async () => { setBusy(true); try { await api.syncWorlds(); await load(); } catch(e) { setError(e.message); } finally { setBusy(false); } };
+  const [revision, setRevision] = useState(0);
+  const load = useCallback(() => setRevision(value => value + 1), []);
+  useEffect(() => {
+    const controller = new AbortController();
+    let timer;
+    async function poll() {
+      let delay = 30000;
+      try {
+        const value = await api.getWorlds(controller.signal);
+        if (!controller.signal.aborted) { setData(value); setError(''); }
+        if (value.running) delay = 3000;
+      } catch (error) {
+        if (!controller.signal.aborted) setError(error.message);
+      } finally {
+        if (!controller.signal.aborted) timer = setTimeout(poll, delay);
+      }
+    }
+    queueMicrotask(() => { if (!controller.signal.aborted) void poll(); });
+    return () => { controller.abort(); clearTimeout(timer); };
+  }, [revision]);
+  const sync = async () => { setBusy(true); try { await api.syncWorlds(); load(); } catch(e) { setError(e.message); } finally { setBusy(false); } };
   const rows = data?.schedules || [], completed = rows.filter(r=>scheduleStatus(r)==='completed').length;
   const visible = selectSchedules(rows, filter, search), pages = Math.max(1, Math.ceil(visible.length / 10)), current = Math.min(page, pages);
   const counts = data?.last?.counts;

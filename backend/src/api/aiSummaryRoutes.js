@@ -2,11 +2,11 @@ const express = require('express');
 const { SummaryError } = require('../services/aiSummary');
 const { ChatGptAuthError } = require('../services/chatgptAuth');
 
-function createAiSummaryRouter(service, { allowedOrigins = ['http://127.0.0.1:5173', 'http://localhost:5173'] } = {}) {
+function createAiSummaryRouter(service, { frontendOrigin = 'http://127.0.0.1:5173' } = {}) {
   const router = express.Router();
+  router.use('/matches/:gameId/ai-summary', require('../middleware/localRequest').localRequestGuard(frontendOrigin));
   const respond = (allowGenerate) => async (req, res) => {
     res.set('Cache-Control', 'no-store');
-    if (allowGenerate && req.headers.origin && !allowedOrigins.includes(req.headers.origin)) return res.status(403).json({ error: 'dol.gg 화면에서 요약을 요청해 주세요.' });
     try {
       const result = await service.getSummary(req.params.gameId, req.query.scope || 'series', { allowGenerate });
       res.json({ success: true, ...result });

@@ -1,4 +1,4 @@
-import { useChatGpt } from '../contexts/ChatGptContext';
+import { useChatGpt } from '../contexts/appContexts';
 
 export default function ChatGptConnection() {
   const auth = useChatGpt();
