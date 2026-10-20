@@ -36,7 +36,7 @@ async function fixture(t) {
     if (url.endsWith('/oauth/revoke')) return new Response(null, { status: control.revokeOk ? 200 : 503 });
     assert.fail(`Unexpected endpoint ${url}`);
   };
-  const make = () => createChatGptAuth({ directory, fetchImpl, now: () => control.clock });
+  const make = (options = {}) => createChatGptAuth({ directory, fetchImpl, now: () => control.clock, ...options });
   const auth = make();
   async function begin(options) {
     const result = await auth.beginSignIn(options);
@@ -227,4 +227,15 @@ test('subscription streams require completion and preserve chunked Unicode; usag
   assert.deepEqual(await readChatGptResponse(sse([{ type: 'response.output_text.delta', delta: '한국어' }, { type: 'response.completed', response }])), response);
   await assert.rejects(readChatGptResponse(sse([{ type: 'response.output_text.delta', delta: 'partial' }])), { code: 'stream_interrupted' });
   await assert.rejects(readChatGptResponse(sse([{ type: 'response.failed', response: { error: { code: 'subscription_sharing_usage_limit_exceeded' } } }])), { code: 'subscription_sharing_usage_limit_exceeded' });
+});
+
+
+test('fixed summary model overrides previous selection and never falls back to another model', async (t) => {
+  const f = await fixture(t);
+  await f.finish(await f.begin());
+  const fixed = f.make({ fixedModel: 'qa-model-second' });
+  assert.deepEqual((await fixed.listModels()).map(item => item.slug), ['qa-model-second']);
+  assert.equal((await fixed.summaryContext()).model, 'qa-model-second');
+  await assert.rejects(fixed.selectModel('qa-model-first'), { code: 'MODEL_NOT_AVAILABLE' });
+  await assert.rejects(f.make({ fixedModel: 'missing-model' }).listModels(), { code: 'CHATGPT_NO_MODELS' });
 });

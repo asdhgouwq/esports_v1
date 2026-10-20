@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { DDragonProvider } from './contexts/DDragonContext';
 import Navbar from './components/Navbar';
+import DataAttribution from './components/DataAttribution';
+import DataSourcesPage from './pages/DataSourcesPage';
 import CompetitionPage, { HomeEntry } from './pages/CompetitionPage';
 import SchedulePage from './pages/SchedulePage';
 import StandingsPage from './pages/StandingsPage';
@@ -23,9 +25,11 @@ function App() {
               <Route path="/standings" element={<StandingsPage />} />
               <Route path="/teams" element={<TeamsPage />} />
               <Route path="/match/:gameId" element={<MatchDetailPage />} />
+              <Route path="/data-sources" element={<DataSourcesPage />} />
               <Route path="/data-connection" element={<DataConnectionPage />} />
             </Routes>
           </main>
+          <DataAttribution />
         </div>
       </BrowserRouter>
     </DDragonProvider>

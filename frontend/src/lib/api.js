@@ -30,6 +30,7 @@ export const api = {
     return apiFetch(`/api/matches${query ? `?${query}` : ''}`);
   },
   getMatchStats: (gameId) => apiFetch(`/api/matches/${encodeURIComponent(gameId)}/stats`),
+  getMatchTimeline: (gameId, signal) => apiFetch(`/api/matches/${encodeURIComponent(gameId)}/timeline`, { signal }),
   getMatchDraft: (gameId, signal) => apiFetch(`/api/matches/${encodeURIComponent(gameId)}/draft`, { signal }),
   getAiSummary: (gameId, scope, signal) => apiFetch(`/api/matches/${encodeURIComponent(gameId)}/ai-summary?scope=${scope}`, { signal }),
   generateAiSummary: (gameId, scope, signal) => apiFetch(`/api/matches/${encodeURIComponent(gameId)}/ai-summary?scope=${scope}`, { method: 'POST', signal }),

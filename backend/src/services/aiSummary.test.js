@@ -4,7 +4,7 @@ const fs = require('node:fs/promises');
 const os = require('node:os');
 const path = require('node:path');
 const express = require('express');
-const { createAiSummaryService, buildEvidence, validateReport, validateNumericClaims } = require('./aiSummary');
+const { createAiSummaryService, compactEvidence, buildEvidence, validateReport, validateNumericClaims } = require('./aiSummary');
 const { createAiSummaryRouter } = require('../api/aiSummaryRoutes');
 
 const games = () => [
@@ -250,7 +250,8 @@ test('ChatGPT inference follows the subscription contract and isolates caches by
       assert.equal(body.stream, true);
       assert.ok(Array.isArray(body.input));
       assert.deepEqual(JSON.parse(body.input[0].content).recordedScore, [1, 1]);
-      assert.equal(body.max_output_tokens, undefined);
+      assert.equal(body.max_output_tokens, 2000);
+      assert.deepEqual(body.reasoning, { effort: 'low' });
       assert.equal(body.previous_response_id, undefined);
       const response = await completion().json();
       return subscriptionStream([
@@ -294,4 +295,43 @@ test('a single fifth-set report retains its source set number separately from co
   const evidence=buildEvidence([{...games()[0],game_number:5}],[],'game');
   assert.equal(evidence.sets[0].gameNumber,5);
   assert.equal(evidence.sets[0].recordedOrder,1);
+});
+
+test('timeline evidence is scoped to the verified set and its gold values reach guarded AI generation',async t=>{
+ const options=await setup(t);
+ const timeline={state:'ready',gameId:'g1',blue:{team:'BETA'},red:{team:'ALPHA'},coverage:{timeBasis:'feed_elapsed',positions:false,experience:false,steals:false},milestones:[{minute:10,seconds:600,blueGold:21000,redGold:27000,goldDifference:-6000}],events:[{kind:'dragon',team:'ALPHA',seconds:480,count:1,stealConfirmed:false}]};
+ const service=createAiSummaryService({...options,db:fakeDb(games(),numericPlayers()),getApiKey:()=> 'test-only',getTimeline:async id=>id==='g1'?timeline:{state:'not_recorded'},fetchImpl:async(_,request)=>{
+  const {input,instructions}=JSON.parse(request.body),evidence=JSON.parse(input);
+  assert.equal(evidence.timelineAvailable,true);assert.equal(evidence.timelines.length,1);assert.equal(evidence.timelines[0].gameId,'g1');
+  assert.equal(evidence.sets.find(g=>g.gameId==='g1').blueTeam,'BETA');assert.equal(evidence.sets.find(g=>g.gameId==='g2').blueTeam,'BETA');
+  assert.match(instructions,/스틸·역전이라고 쓰지/);assert.equal(evidence.timelines[0].coverage.positions,false);
+  return completion({...report(),overview:'약 10분 ALPHA의 기록은 27000골드입니다.'});
+ }});
+ const result=await service.getSummary('g1','series',{allowGenerate:true});assert.equal(result.source.timelineSets,1);assert.equal(result.source.timelineAvailable,true);assert.equal(result.source.sets,2);
+});
+test('a timeline from another game does not enable narrative analysis',()=>{
+ const evidence=buildEvidence([games()[0]],[],'game',true,[{state:'ready',gameId:'unrelated',blue:{team:'ALPHA'},red:{team:'BETA'}}]);
+ assert.equal(evidence.timelineAvailable,false);assert.equal(evidence.timelines.length,0);
+});
+
+test('a Baron claim cannot use an inhibitor timestamp; missing event times and unsupported steals are rejected',()=>{
+ const {validateTimelineClaims}=require('./aiSummary');
+ const evidence={timelineAvailable:true,timelines:[{events:[{kind:'baron',seconds:2011},{kind:'inhibitor',seconds:1910},{kind:'kills',seconds:236}],milestones:[{seconds:1800}]}]};
+ for(const detail of ['약 31분 50초에 바론을 확보했습니다.','약 4분 22초 첫 킬을 기록했습니다.','바론 스틸로 역전했습니다.'])assert.throws(()=>validateTimelineClaims({...report(),keyPoints:[{title:'시점 검증',detail}]},evidence),{code:'AI_FACT_MISMATCH'});
+ for(const detail of ['약 33분 31초에 바론을 확보했습니다.','약 31분 50초 억제기를 파괴했습니다.','약 30분 골드 차이를 확인했습니다.'])assert.ok(validateTimelineClaims({...report(),keyPoints:[{title:'시점 검증',detail}]},evidence));
+});
+
+
+test('compact inference evidence retains every event and milestone without mutating validation evidence', () => {
+  const evidence = buildEvidence(games(), [], 'series');
+  evidence.timelines = [{ gameId: 'g1', coverage: { positions: false, rawFrames: 8000 }, milestones: [{ seconds: 300, blueGold: 10000, redGold: 9000 }], events: Array.from({ length: 44 }, (_, i) => ({ id: 'long-source-id-' + i, timestamp: '2026-10-01T00:00:00Z', fromSeconds: i, seconds: i + 1, kind: 'kill', team: 'ALPHA', pairingConfirmed: false, killers: [{ id: 1, name: 'Player', champion: 'Ahri', role: 'MID', count: 1 }] })) }];
+  const before = JSON.stringify(evidence);
+  const compact = compactEvidence(evidence);
+  assert.equal(JSON.stringify(evidence), before);
+  assert.equal(compact.timelines[0].events.length, 44);
+  assert.deepEqual(compact.timelines[0].milestones, evidence.timelines[0].milestones);
+  assert.equal(compact.timelines[0].events[43].seconds, 44);
+  assert.equal(compact.timelines[0].events[0].pairingConfirmed, false);
+  assert.equal(compact.timelines[0].coverage.positions, false);
+  assert.ok(JSON.stringify(compact).length < before.length);
 });

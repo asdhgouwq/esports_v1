@@ -9,6 +9,8 @@ import { LoadingSpinner, ErrorMessage } from '../components/ui';
 import MatchSummary from '../components/MatchSummary';
 import AiMatchSummary from '../components/AiMatchSummary';
 import TournamentDraft from '../components/TournamentDraft';
+import MatchTimeline from '../components/MatchTimeline';
+import {MatchAttribution} from '../components/DataAttribution';
 import { useMatchDraft } from '../hooks/useMatchDraft';
 
 const ROLE_ORDER = ['Top', 'Jungle', 'Mid', 'Bot', 'Support'];
@@ -150,6 +152,7 @@ function MatchContent({ gameId }) {
       <h1>{teams[0] || '팀 정보 대기'} <span>VS</span> {teams[1] || '팀 정보 대기'}</h1>
       <p>{match ? formatDate(match.datetime_utc) : '경기 기록이 연결되면 대회·날짜·대진이 표시됩니다.'}</p>
     </header>
+    <MatchAttribution game={selectedGame || match} />
     <div className="match-section-tabs" role="tablist" aria-label="경기 상세 구분">
       {MATCH_TABS.map((item, index) => <button type="button" key={item.id} role="tab" id={`tab-${item.id}`} aria-controls="match-tab-panel" aria-selected={tab === item.id} tabIndex={tab === item.id ? 0 : -1} onKeyDown={(event) => selectWithKeyboard(event, index)} onClick={() => setTab(item.id)}>{item.label}{item.detail && <small>{item.detail}</small>}</button>)}
     </div>
@@ -163,8 +166,9 @@ function MatchContent({ gameId }) {
       </>}
       {setIndex >= 0 && <>
         {selectedGame && <div className="match-set-overview"><span>승리 팀 <strong>{selectedGame.win_team || '결과 미확인'}</strong></span><span>경기 시간 <strong>{formatGameLength(selectedGame.gamelength_number)}</strong></span><span>패치 <strong>{selectedGame.patch || '—'}</strong></span></div>}
-        <TournamentDraft key={selectedGame?.game_id || `draft-${setIndex}`} game={selectedGame} draft={draft} players={stats} version={version} champions={champions} setNumber={setIndex + 1} preview={gameId === 'layout-preview'} loading={loading || draft.state === 'loading'} />
-        <AiMatchSummary key={selectedGame?.game_id || `empty-${setIndex}`} gameId={selectedGame?.game_id} scope="game" setNumber={setIndex + 1} available={Boolean(selectedGame && [selectedGame.team1, selectedGame.team2].includes(selectedGame.win_team))} loading={loading} dataError={error} />
+        <TournamentDraft key={`draft-${selectedGame?.game_id || setIndex}`} game={selectedGame} draft={draft} players={stats} version={version} champions={champions} setNumber={setIndex + 1} preview={gameId === 'layout-preview'} loading={loading || draft.state === 'loading'} />
+        <MatchTimeline gameId={selectedGame?.game_id} />
+        <AiMatchSummary key={`ai-${selectedGame?.game_id || setIndex}`} gameId={selectedGame?.game_id} scope="game" setNumber={setIndex + 1} available={Boolean(selectedGame && [selectedGame.team1, selectedGame.team2].includes(selectedGame.win_team))} loading={loading} dataError={error} />
         {!loading && !selectedGame && <div className="match-section-empty"><strong>{setIndex + 1}세트 기록이 없습니다.</strong><p>경기 진행 여부와 세트 기록이 확인되면 표시됩니다.</p></div>}
         {selectedGame && <>
           <h3 className="match-stats-heading">선수별 기록</h3>

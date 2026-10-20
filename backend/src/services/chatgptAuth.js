@@ -16,6 +16,7 @@ function createChatGptAuth({
   directory = path.resolve(__dirname, '../../.local/chatgpt-auth'),
   callbackUrl = 'http://127.0.0.1:3000/auth/callback',
   fetchImpl = globalThis.fetch, verifyIdToken,
+  fixedModel = null,
   preferredModel = () => process.env.CHATGPT_MODEL,
   now = () => Date.now(),
 } = {}) {
@@ -263,7 +264,7 @@ function createChatGptAuth({
     const cached = modelCache.get(profile.id);
     if (!force && cached?.expiresAt > now()) return cached.models;
     const data = await jsonRequest(`${RESOURCE}/models`, { headers: { Authorization: `Bearer ${token}` } });
-    const models = (Array.isArray(data.models) ? data.models : []).filter((item) => item.visibility === 'list' && typeof item.slug === 'string')
+    const models = (Array.isArray(data.models) ? data.models : []).filter((item) => item.visibility === 'list' && typeof item.slug === 'string' && (!fixedModel || item.slug === fixedModel))
       .map((item) => ({ slug: item.slug, displayName: typeof item.display_name === 'string' ? item.display_name : item.slug }));
     if (!models.length) throw new ChatGptAuthError('CHATGPT_NO_MODELS', '사용 가능한 구독 모델을 확인하지 못했습니다.', 503);
     modelCache.set(profile.id, { models, expiresAt: now() + 60000 });

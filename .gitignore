@@ -11,3 +11,5 @@ backend/.local/chatgpt-auth/
 backend/.local/leaguepedia/
 backend/.cache/leaguepedia/
 backend/.local/worlds-sync/
+
+backend/.cache/lolesports/

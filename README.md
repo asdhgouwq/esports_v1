@@ -266,3 +266,37 @@ store.setFilter('league', 'LPL');
 ## 📄 라이선스
 
 Private Project (2026)
+
+### 개발용 월즈 타임라인 (무료 공개 피드 확인: 2026-10-20)
+
+2026 Worlds Play-In Cloud9–Karmine Corp 1세트의 LoL Esports 공개 LiveStats 기록을 수집·검증했습니다. 별도 API 키나 유료 계약 없이 조회됐지만, 정식 개발자용 API 계약은 아니며 향후 공개 범위·보관 기간·형식은 보장되지 않습니다. 발표용 별도 배포본에는 이 변경이 자동 반영되지 않습니다.
+
+- `GET /api/matches/:gameId/timeline`: 가져온 세트의 골드 추이와 킬·용·바론·포탑·억제기 이벤트. 다른 세트는 `not_recorded`를 반환합니다.
+- 선수 10명의 챔피언, 원본 경기 ID, 종료 기록, 최종 골드·킬, 프레임 연속성을 검증한 뒤 `backend/data/timelines/`에 정규화한 공개 기록을 저장합니다. 이 파일은 Git 추적 대상이므로 다른 개발 컴퓨터에서도 사용할 수 있습니다. Supabase에 별도 타임라인 테이블을 만들지는 않습니다.
+- 원본 응답은 Git에서 제외한 `backend/.cache/lolesports/`에 보관합니다. 화면이나 AI 요청은 외부 피드를 매번 재수집하지 않습니다.
+- 시간은 피드 경과 기준으로 게임 시계와 수초 차이가 있습니다. 골드는 약 10초 간격으로 표시하고 이벤트는 원본 프레임 증감에서 추출합니다. 선수 위치·경험치·유충·바론 스틸 원자료가 없어 해당 내용은 추측하지 않습니다. 동시 킬·사망을 임의로 짝짓지 않습니다.
+- AI 요약은 해당 세트의 이벤트·5분 단위 골드와 기존 최종 기록을 함께 사용합니다. 다른 세트에 타임라인이 있다고 가정하지 않습니다.
+
+저장본을 다시 수집하고 기존 경기 기록과 검증하려면 `backend` 폴더에서 실행합니다. Supabase 서버 전용 키는 기존 `backend/.env`를 사용합니다.
+
+```sh
+node scripts/import-worlds-timeline.js
+```
+
+개발 화면: `/match/2026%20Season%20World%20Championship%2FPlay-In_Round%201_1_1`의 **1세트** 탭.
+
+### AI 요약 사용량 설정
+
+- 모델은 `gpt-6-luna`, 추론 강도는 `low`로 고정하며 화면의 모델 선택 칸은 제거했습니다. 연결된 구독에서 해당 모델을 사용할 수 없으면 다른 모델로 자동 전환하지 않습니다.
+- 요청당 출력 상한은 추론을 포함해 2,000토큰입니다. 미완성 응답은 저장하지 않습니다.
+- 모든 타임라인 사건과 골드 지표를 유지하면서 반복 식별자·원본 메타데이터를 요청에서 줄입니다. 검증은 압축 전 원본 수치·시점으로 수행하며, 검증 실패 시 한 번만 교정 요청합니다.
+- 동일 계정·모델·원본 기록의 완성된 요약을 재사용합니다. 설정 변경 전 캐시는 새 요청에 사용하지 않습니다.
+
+### 데이터 출처·이용 조건 확인 (2026-10-20)
+
+- `/data-sources`에서 데이터별 출처, 가공 방식, 라이선스와 확인되지 않은 조건을 안내합니다. 모든 화면 하단에 Leaguepedia 기여자·라이선스와 Riot 비공식 서비스 안내를 표시합니다. 경기 상세에는 관련 Leaguepedia 대회 문서 링크를 제공합니다.
+- Leaguepedia의 원본 및 이를 기반으로 가공한 기록: [Leaguepedia 저작권 안내](https://lol.fandom.com/wiki/Leaguepedia:Copyrights), [Fandom 라이선스](https://www.fandom.com/licensing), [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/). 원본·기여자·라이선스·변경 사실을 표시하고 해당 파생 콘텐츠에도 동일 조건을 적용합니다. 사이트 코드, Riot 이미지, 별도 피드에 이 라이선스를 일괄 적용하지 않습니다.
+- LiveStats의 공개 응답은 수집 가능함을 확인했지만, 해당 window/details 경로의 저장·재배포를 명시적으로 허용하는 전용 조건은 찾지 못했습니다. 일반 개발자 API 키/약관이 이 경로의 이용 허가라고 간주하지 않습니다. 출처 표시만으로 이용 허가가 생기지 않습니다. 상시 공개 운영·상업적 배포 전에는 Riot/제공자의 조건과 필요한 권한을 확인해야 합니다. 이 변경은 재배포 허가를 확보한 것이 아닙니다.
+- 확인한 공식 자료: [Riot e스포츠 데이터 및 GRID 안내](https://riotesportsdata.com/en-us/league-of-legends/), [개발자 정책](https://developer.riotgames.com/policies/general), [API 약관](https://developer.riotgames.com/terms), [Riot 이용 약관](https://www.riotgames.com/en/terms-of-service), [팬 프로젝트 정책](https://www.riotgames.com/en/legal).
+- 비교 조사: [OP.GG e스포츠](https://esports.op.gg/)와 [gol.gg 공개 페이지](https://gol.gg/champion/champion-builds/165/season-ALL/split-ALL/tournament-LCS%202026%20Spring/)는 Riot 비공식 서비스·상표권 안내를 표시합니다. 확인한 화면만으로 데이터 공급 계약·재배포 권한은 판단할 수 없습니다. dol.gg는 두 사이트를 자동 수집하지 않습니다.
+- 현재 적용 대상은 원본 개발 사이트입니다. 별도 발표용 배포 사이트는 이번 변경에서 갱신하지 않았습니다.

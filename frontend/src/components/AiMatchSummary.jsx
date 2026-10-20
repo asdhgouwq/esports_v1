@@ -34,6 +34,7 @@ export default function AiMatchSummary({ gameId, scope = 'series', available, lo
       <div className="ai-summary-lead"><span>한줄 {scope === 'series' ? '총평' : '요약'}</span><h4>{result.report.headline}</h4><p>{result.report.overview}</p></div>
       <section className="ai-summary-points" aria-label="AI 핵심 포인트"><h4>핵심 포인트</h4><ol>{result.report.keyPoints.map((point, index) => <li key={index}><span>{String(index + 1).padStart(2, '0')}</span><div><strong>{point.title}</strong><p>{point.detail}</p></div></li>)}</ol></section>
       <section className="ai-team-assessments" aria-label="AI 양 팀 평가"><h4>양 팀 평가</h4><div>{result.report.teamAssessments.map((item) => <article key={item.team}><h5>{item.team}</h5><p>{item.assessment}</p></article>)}</div></section>
+      {result.source?.timelineAvailable && <p className="ai-summary-limitation">수집된 {result.source.timelineSets}개 세트의 시간대별 기록을 반영했습니다. 위치·경험치·유충·바론 스틸은 확인되지 않아 분석에서 제외합니다.</p>}
       {!result.source?.timelineAvailable && <p className="ai-summary-limitation">시간대별 경기 흐름이 연결되면 구체적인 승부처도 함께 분석합니다.</p>}
       <footer className="ai-summary-footer"><span>수집된 {result.source?.sets || 0}세트 · {result.source?.players ? '경기 및 선수 기록' : '경기 기록'} 기반{result.billing === 'chatgpt_plan' ? ' · ChatGPT 구독 사용' : ''}</span><span>{new Date(result.generatedAt).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })} 생성</span></footer>
     </> : <>
