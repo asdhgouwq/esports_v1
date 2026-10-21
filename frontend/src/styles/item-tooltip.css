@@ -1,0 +1,14 @@
+.score-tooltip-trigger{padding:0;cursor:help}
+.score-tooltip-trigger:hover,.score-tooltip-trigger:focus-visible{outline:2px solid #d4e8ac;outline-offset:2px}
+.item-tooltip{pointer-events:none;position:fixed;z-index:1000;width:340px;max-width:calc(100vw - 24px);max-height:calc(100dvh - 24px);overflow-y:auto;box-sizing:border-box;padding:16px;color:#e6ecef;background:#111b25;border:1px solid #7895a8;border-radius:8px;box-shadow:0 12px 40px #0009;font-size:12px;line-height:1.7;overflow-wrap:anywhere;scrollbar-width:thin;scrollbar-color:#5b7381 #111b25}
+.item-tooltip.is-touch{pointer-events:auto}
+.item-tooltip-header{display:flex;align-items:center;gap:12px}
+.item-tooltip-header strong{display:block;color:#f2e1a5;font-size:15px;font-weight:700;line-height:1.5}
+.item-tooltip-compact .item-tooltip-header{align-items:baseline;justify-content:space-between;gap:8px}
+.item-tooltip-version{flex:none;color:#788e9d;font-size:9px}
+.item-tooltip section{border-top:1px solid #627c8c40;padding-top:10px;margin-top:12px}
+.item-tooltip-stats{margin:6px 0 0;color:#d7e7f2;font-size:11px;line-height:1.8}
+.item-tooltip-effects p{margin:0 0 10px;white-space:pre-line}
+.item-tooltip-effects p:last-child{margin-bottom:0}
+.item-tooltip footer.item-tooltip-price{border-top:1px solid #627c8c40;padding-top:10px;margin-top:12px;color:#e8cb78;font-size:12px}
+.item-tooltip-price b{font-weight:600}

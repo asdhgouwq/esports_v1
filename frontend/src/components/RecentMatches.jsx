@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { groupRecentMatches, matchDate } from '../lib/recentMatches';
 import { COMPETITIONS, belongsToCompetition, competitionPath } from '../config/competitions';
 import '../styles/recent-matches.css';
+import TeamIdentity from './TeamIdentity';
 
 export default function RecentMatches({ matches, loading, error, refetch }) {
   const rows = useMemo(() => groupRecentMatches(matches), [matches]);
@@ -17,9 +18,9 @@ export default function RecentMatches({ matches, loading, error, refetch }) {
         return <tr key={row.id}>
           <td className="recent-date">{matchDate(row.date)}</td>
           <td>{competition ? <Link className="recent-league" to={competitionPath(competition.id)}>{competition.label}<span>↗</span></Link> : <span className="recent-league">기타 대회</span>}<small>{row.tournament}</small></td>
-          <td className="recent-team-left"><span className={row.score1 > row.score2 ? 'recent-winner' : ''}>{row.team1}</span></td>
+          <td className="recent-team-left"><TeamIdentity name={row.team1} logoSide="end" className={row.score1 > row.score2 ? 'recent-winner' : ''} /></td>
           <td className="recent-score"><Link to={`/match/${encodeURIComponent(row.gameId)}`} aria-label={`${row.team1} ${row.score1} 대 ${row.score2} ${row.team2} 경기 상세`}><b className={row.score1 > row.score2 ? 'recent-winner' : ''}>{row.score1}</b><i>:</i><b className={row.score2 > row.score1 ? 'recent-winner' : ''}>{row.score2}</b></Link>{row.singleGame && <small>단일 세트</small>}</td>
-          <td><span className={row.score2 > row.score1 ? 'recent-winner' : ''}>{row.team2}</span></td>
+          <td><TeamIdentity name={row.team2} className={row.score2 > row.score1 ? 'recent-winner' : ''} /></td>
         </tr>;
       })}
     </tbody></table></div>

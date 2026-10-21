@@ -15,23 +15,43 @@ const list = (value) => (typeof value === 'string' ? value.split(',') : Array.is
 function normalizeDraft(record, match) {
   if (!record || record.GameId !== match.game_id || !record.Team1 || !record.Team2 || record.Team1 === record.Team2
     || ![record.Team1, record.Team2].every((team) => [match.team1, match.team2].includes(team))) return null;
-  const sides = [1, 2].map((side) => ({
+  const teams = [1, 2].map((side) => ({
     team: record[`Team${side}`],
     picks: Array.from({ length: 5 }, (_, index) => name(record[`Team${side}Pick${index + 1}`])),
     bans: Array.from({ length: 5 }, (_, index) => name(record[`Team${side}Ban${index + 1}`])),
   }));
-  for (const side of sides) {
+  for (const side of teams) {
     const storedSide = match.team1 === side.team ? 1 : 2;
     const stored = list(match[`team${storedSide}_picks`]);
     const ordered = list(side.picks);
     // Two complete records must describe the same final composition.
     if (stored.length === 5 && ordered.length === 5 && stored.join('|') !== ordered.join('|')) return null;
   }
-  const picks = sides.flatMap((side) => side.picks.filter(Boolean).map(identity));
+  const picks = teams.flatMap((side) => side.picks.filter(Boolean).map(identity));
   if (new Set(picks).size !== picks.length) return null;
-  if (!sides.some((side) => [...side.picks, ...side.bans].some(Boolean))) return null;
-  return { state: 'ready', gameId: match.game_id, format: 'tournament', firstPickSide: 'blue', blue: sides[0], red: sides[1], source: 'Leaguepedia · PicksAndBansS7' };
+  if (!teams.some((side) => [...side.picks, ...side.bans].some(Boolean))) return null;
+  const knownTeam = value => teams.find(team => team.team === name(value))?.team || null;
+  const firstPickTeam = knownTeam(record.FirstPick) || teams[0].team;
+  // PicksAndBansS7 stores the first-picking team first, independently of map side.
+  if (firstPickTeam !== teams[0].team || (name(record.FirstPick) && !knownTeam(record.FirstPick))) return null;
+  const switched = [true, 1, '1'].includes(record.SwitchedSides) ? true : [false, 0, '0'].includes(record.SwitchedSides) ? false : null;
+  let blueTeam = knownTeam(record.Blue), redTeam = knownTeam(record.Red);
+  if (name(record.Blue) || name(record.Red)) {
+    if (!blueTeam || !redTeam || blueTeam === redTeam) return null;
+    if (switched !== null && blueTeam !== teams[switched ? 1 : 0].team) return null;
+  } else if (switched !== null) {
+    blueTeam = teams[switched ? 1 : 0].team;
+    redTeam = teams[switched ? 0 : 1].team;
+  }
+  const sidesConfirmed = Boolean(blueTeam && redTeam);
+  return { state: 'ready', gameId: match.game_id, format: 'tournament', teams, firstPickTeam, sidesConfirmed,
+    firstPickSide: sidesConfirmed ? (firstPickTeam === blueTeam ? 'blue' : 'red') : null,
+    blue: teams.find(team => team.team === blueTeam) || null, red: teams.find(team => team.team === redTeam) || null,
+    selections: { side: knownTeam(record.SideSelection), pick: knownTeam(record.PickSelection), first: knownTeam(record.FirstSelection) },
+    source: 'Leaguepedia · PicksAndBansS7 / MatchScheduleGame' };
 }
+
+const hasDraftMetadata = record => record && ['SwitchedSides', 'Blue', 'Red', 'SideSelection', 'PickSelection', 'FirstPick'].every(key => Object.hasOwn(record, key));
 
 function createMatchDraftService({ db, loadDraft, now = () => Date.now() }) {
   const cache = new Map();
@@ -70,4 +90,4 @@ function createMatchDraftService({ db, loadDraft, now = () => Date.now() }) {
   return { getDraft };
 }
 
-module.exports = { createMatchDraftService, normalizeDraft, MatchDraftError };
+module.exports = { createMatchDraftService, normalizeDraft, hasDraftMetadata, MatchDraftError };

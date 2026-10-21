@@ -68,3 +68,6 @@
   .series-summary-metrics small { font-size: 9px; }
   .series-result-note { font-size: 9px; }
 }
+
+.series-summary-score .team-identity { --team-logo-size: 38px; }
+@media(max-width: 700px) { .series-summary-score .team-identity { --team-logo-size: 26px; gap: 6px; } }

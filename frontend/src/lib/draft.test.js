@@ -48,17 +48,29 @@ test('position ordering is used only for five verified distinct roles; sides fol
 
 test('verified sequence overrides role-order arrays and rejects results from previous sets', () => {
   const game = { game_id:'g2', team1:'ALPHA', team2:'BETA', team1_picks:'A,B,C,D,E' };
-  const draft = { state:'ready', gameId:'g2', format:'tournament', firstPickSide:'blue', blue:{team:'ALPHA',picks:['D','A','B','C','E'],bans:[null,null,null,null,null]},red:{team:'BETA',picks:['F','G','H','I','J'],bans:[null,null,null,null,null]} };
+  const draft = { state:'ready', gameId:'g2', format:'tournament', sidesConfirmed:true, firstPickTeam:'ALPHA', blue:{team:'ALPHA',picks:['D','A','B','C','E'],bans:[null,null,null,null,null]},red:{team:'BETA',picks:['F','G','H','I','J'],bans:[null,null,null,null,null]} };
   const result = draftSequence(game, draft);
   assert.equal(result.ordered, true);
   assert.deepEqual(result.game.team1_picks, ['D','A','B','C','E']);
   assert.equal(draftSequence(game, {...draft,gameId:'g1'}).ordered, false);
-  assert.equal(draftSequence(game, {...draft,state:'unavailable'}).firstPickSide, null);
+  assert.equal(draftSequence(game, {...draft,state:'unavailable'}).firstPickTeam, null);
   assert.equal(draftSequence(game, {...draft,blue:{...draft.blue,team:'OTHER'}}).ordered, false);
 });
 
 test('two team pick rows combine into ten distinct chronological pick turns', () => {
-  assert.deepEqual(PICK_TURNS.blue, [1,4,5,8,9]);
-  assert.deepEqual(PICK_TURNS.red, [2,3,6,7,10]);
-  assert.deepEqual([...PICK_TURNS.blue,...PICK_TURNS.red].sort((a,b)=>a-b), Array.from({length:10},(_,i)=>i+1));
+  assert.deepEqual(PICK_TURNS.first, [1,4,5,8,9]);
+  assert.deepEqual(PICK_TURNS.second, [2,3,6,7,10]);
+  assert.deepEqual([...PICK_TURNS.first,...PICK_TURNS.second].sort((a,b)=>a-b), Array.from({length:10},(_,i)=>i+1));
+});
+
+test('a red first-picking team keeps the first turn while blue stays in the left column', () => {
+  const game={game_id:'g1',team1:'BLUE',team2:'RED'};
+  const side=team=>({team,picks:['A','B','C','D','E'],bans:[null,null,null,null,null]});
+  const draft={state:'ready',gameId:'g1',format:'tournament',sidesConfirmed:true,firstPickTeam:'RED',blue:side('BLUE'),red:side('RED'),selections:{side:'BLUE',pick:'RED'}};
+  const result=draftSequence(game,draft);
+  assert.equal(result.game.team1,'BLUE');assert.equal(result.game.team2,'RED');
+  assert.equal(result.firstPickTeam,'RED');assert.equal(result.sidesConfirmed,true);
+  assert.deepEqual(result.selections,{side:'BLUE',pick:'RED'});
+  const unknown=draftSequence(game,{...draft,sidesConfirmed:false,teams:[side('RED'),side('BLUE')],selections:{side:'OTHER'}});
+  assert.equal(unknown.sidesConfirmed,false);assert.equal(unknown.firstPickTeam,'RED');assert.equal(unknown.selections.side,null);
 });

@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import TeamIdentity from '../components/TeamIdentity';
 import { useMatchData } from '../hooks/useMatchData';
 import { LoadingSpinner, ErrorMessage, EmptyState, SectionTitle } from '../components/ui';
 
@@ -38,10 +39,7 @@ export default function TeamsPage() {
                 key={team}
                 className="bg-[#1a1a1a] border border-white/5 hover:border-[#d4af37]/20 rounded-xl p-4 flex flex-col items-center gap-2 transition-all hover:bg-[#212121] cursor-default"
               >
-                <div className="w-12 h-12 rounded-full bg-[#d4af37]/10 border border-[#d4af37]/20 flex items-center justify-center">
-                  <span className="text-[#d4af37] font-black text-sm">{team.slice(0, 3).toUpperCase()}</span>
-                </div>
-                <div className="font-bold text-white text-sm text-center">{team}</div>
+                <TeamIdentity name={team} className="team-card-identity font-bold text-white text-sm" />
                 <div className="flex gap-3 text-xs font-mono">
                   <span className="text-green-400">{wins}W</span>
                   <span className="text-red-400">{losses}L</span>

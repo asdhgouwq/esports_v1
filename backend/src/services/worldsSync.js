@@ -28,15 +28,14 @@ function prepareSnapshot(snapshot) {
     const match = normalizeGame(raw);
     const rawDrafts = draftMap.get(raw.GameId) || [];
     const draft = rawDrafts.length === 1 && normalizeDraft(rawDrafts[0], match);
-    // Scoreboard team order can follow the series, while PicksAndBansS7
-    // records the actual blue/red sides for this set.
-    if (draft && draft.blue.team !== match.team1) {
+    // Only confirmed map sides may reorder the scoreboard, never pick priority.
+    if (draft?.sidesConfirmed && draft.blue.team !== match.team1) {
       for (const suffix of ['', '_picks', '_bans']) {
         [match[`team1${suffix}`], match[`team2${suffix}`]] = [match[`team2${suffix}`], match[`team1${suffix}`]];
       }
     }
     matches.push(match);
-    if (draft && [draft.blue, draft.red].every(s=>s.picks.every(Boolean) && s.bans.every(Boolean))) drafts.push({ game_id: raw.GameId, raw_draft: rawDrafts[0], updated_at: snapshot.fetchedAt });
+    if (draft && draft.teams.every(team=>team.picks.every(Boolean) && team.bans.every(Boolean))) drafts.push({ game_id: raw.GameId, raw_draft: rawDrafts[0], updated_at: snapshot.fetchedAt });
     else pending.push({ gameId: raw.GameId, kind: 'draft' });
     try { players.push(...normalizeBundle(raw, playerMap.get(raw.GameId) || [], rawDrafts, { requireDraft: false }).stats); }
     catch (error) { if (error.code !== 'SOURCE_INCOMPLETE') throw error; pending.push({ gameId: raw.GameId, kind: 'players' }); }
@@ -44,7 +43,7 @@ function prepareSnapshot(snapshot) {
   unique(matches, 'game_id'); unique(players, 'id');
   return { schedules, matches, players, drafts, pending };
 }
-function createWorldsSync({ db, source, storageDir = path.resolve(__dirname, '../../.local/worlds-sync'), now = () => Date.now(), serverConfigured = () => Boolean(process.env.SUPABASE_SECRET_KEY), intervalMs = 15 * 60000, enabled = process.env.WORLDS_AUTO_SYNC === 'true', year = 2026, setTimer = setTimeout, clearTimer = clearTimeout } = {}) {
+function createWorldsSync({ db, source, storageDir = path.resolve(__dirname, '../../.local/worlds-sync'), now = () => Date.now(), serverConfigured = () => Boolean(process.env.SUPABASE_SECRET_KEY), intervalMs = 15 * 60000, enabled = process.env.WORLDS_AUTO_SYNC === 'true', year = 2026, setTimer = setTimeout, clearTimer = clearTimeout, onSynced = () => {}, getTimelineStatus = () => null } = {}) {
   let running = null, timer, nextRunAt = null, last = null;
   const stateFile = path.join(storageDir, 'status.json');
   const status = () => ({ year, enabled, intervalMinutes: intervalMs / 60000, serverWriteConfigured: serverConfigured(), running: Boolean(running), nextRunAt: nextRunAt ? new Date(nextRunAt).toISOString() : null, last });
@@ -71,6 +70,7 @@ function createWorldsSync({ db, source, storageDir = path.resolve(__dirname, '..
     const counts = { schedules: bundle.schedules.length, completedSeries: bundle.schedules.filter(s=>s.winner && !s.is_nullified).length, pendingSeries: bundle.schedules.filter(s=>!s.winner && !s.is_nullified).length, games: bundle.matches.length, players: bundle.players.length, drafts: bundle.drafts.length, pendingDetails: bundle.pending.length };
     last = { ...last, state: 'complete', message: '월즈 데이터를 갱신했습니다.', finishedAt: new Date(now()).toISOString(), sourceFetchedAt: snapshot.fetchedAt, counts, pending: bundle.pending };
     await save();
+    void Promise.resolve().then(() => onSynced()).catch(() => {});
     return last;
   }
   function schedule(delay = intervalMs) {
@@ -98,7 +98,7 @@ function createWorldsSync({ db, source, storageDir = path.resolve(__dirname, '..
     const fixtures = await db.from('match_schedules').select('*').like('overview_page', `${root}%`).order('datetime_utc', { ascending: true, nullsFirst: false }).limit(500);
     const games = await db.from('matches').select('game_id,match_id,game_number,datetime_utc').like('match_id', `${root}%`).order('game_number', { ascending: true }).limit(1000);
     if (fixtures.error || games.error) throw new LeaguepediaError('DATABASE_READ_FAILED', '월즈 일정과 경기 정보를 불러오지 못했습니다.');
-    return { ...status(), source: 'Leaguepedia', schedules: fixtures.data.map(row => ({ ...row, status: row.is_nullified ? 'cancelled' : row.winner ? 'completed' : 'scheduled', games: games.data.filter(g=>g.match_id===row.match_id) })) };
+    return { ...status(), timelineSync: getTimelineStatus(), source: 'Leaguepedia', schedules: fixtures.data.map(row => ({ ...row, status: row.is_nullified ? 'cancelled' : row.winner ? 'completed' : 'scheduled', games: games.data.filter(g=>g.match_id===row.match_id) })) };
   }
   return { start, startSync, status, event, wait: () => running, stop: () => { enabled = false; clearTimer(timer); nextRunAt = null; } };
 }

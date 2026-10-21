@@ -1,8 +1,10 @@
-.match-detail-page { max-width: 1440px; margin: auto; padding: 32px 40px 60px; }
+.match-detail-page { max-width: 1600px; margin: auto; padding: 28px 28px 60px; }
 .match-back-link { display: inline-block; color: #9babad; font-size: 11px; text-decoration: none; margin-bottom: 28px; }
 .match-series-header { background: #181d1f; border: 1px solid #30393b; padding: 35px 24px; text-align: center; margin-bottom: 24px; }
-.match-series-header h1 { font-size: clamp(22px, 3vw, 34px); font-weight: 700; margin: 20px 0 15px; }
-.match-series-header h1 span { color: #788b8f; margin: 0 24px; font-size: 15px; font-weight: 400; }
+.match-series-header h1 { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 24px; font-size: clamp(22px, 3vw, 34px); font-weight: 700; margin: 20px 0 15px; --team-logo-size: 48px; }
+.match-series-header .team-identity { text-align: left; }
+.match-series-header .team-identity-logo-end { text-align: right; }
+.match-series-header .match-versus { color: #788b8f; font-size: 15px; font-weight: 400; flex: none; }
 .match-series-header p { font-size: 11px; color: #93a4a8; }
 .match-section-tabs { display: flex; overflow-x: auto; gap: 4px; padding: 8px; border: 1px solid #30393b; background: #181d1f; border-radius: 5px; margin-bottom: 24px; }
 .match-section-tabs button { flex: 1; min-width: 88px; padding: 14px 16px; color: #9dacae; background: transparent; border: 1px solid transparent; border-radius: 3px; font-size: 12px; white-space: nowrap; cursor: pointer; }
@@ -10,7 +12,7 @@
 .match-section-tabs button[aria-selected="true"] { color: #d4e88c; background: #d4e88c0b; border-color: #63724b; }
 .match-section-tabs button:hover { background: #d4e88c09; }
 .match-section-tabs button:focus-visible { outline: 2px solid #d4e88c; outline-offset: -2px; }
-.match-tab-panel { padding: 28px; border: 1px solid #30393b; background: #181d1f; min-height: 340px; }
+.match-tab-panel { padding: 20px; border: 1px solid #30393b; background: #181d1f; min-height: 340px; }
 .match-tab-panel:focus-visible { outline: 1px solid #63724b; }
 .match-panel-heading h2 { font-size: 20px; font-weight: 600; margin: 8px 0 16px; }
 .match-section-description { color: #93a4a8; font-size: 12px; margin-bottom: 26px; }
@@ -22,9 +24,6 @@
 .match-section-empty { text-align: center; color: #93a4a8; font-size: 12px; padding: 60px 12px; }
 .match-section-empty strong { font-weight: 500; color: #cad5d6; }
 .match-section-empty p { font-size: 11px; margin-top: 12px; }
-.match-set-overview { display: flex; flex-wrap: wrap; gap: 24px; padding: 16px 0; font-size: 11px; color: #93a4a8; }
-.match-set-overview strong { color: #d4e88c; font-weight: 500; margin-left: 10px; }
-.match-player-tables { display: grid; gap: 18px; }
-.match-stats-heading { font-size: 14px; margin: 24px 0 16px; }
-@media(max-width: 700px) { .match-detail-page { padding: 24px 16px; } .match-series-header { padding: 25px 15px; } .match-series-header h1 span { margin: 0 10px; } .match-preview-grid { grid-template-columns: 1fr; } .match-tab-panel { padding: 20px 16px; } }
+.match-stats-heading { font-size: 13px; margin: 12px 0 6px; }
+@media(max-width: 700px) { .match-detail-page { padding: 24px 16px; } .match-series-header { padding: 25px 15px; } .match-series-header h1 { gap: 12px; font-size: 18px; --team-logo-size: 34px; } .match-series-header .team-identity { gap: 8px; } .match-preview-grid { grid-template-columns: 1fr; } .match-tab-panel { padding: 20px 16px; } }
 @media(max-width: 700px) { .match-section-tabs button { min-width: 64px; padding: 12px 8px; } .match-section-tabs button small { display: block; margin: 4px 0 0; } }

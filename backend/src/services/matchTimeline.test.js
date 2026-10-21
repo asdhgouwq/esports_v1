@@ -17,8 +17,44 @@ test('timeline identifies teams by all five champions and preserves feed sides, 
  assert.equal(data.coverage.experience,false);assert.equal(data.coverage.positions,false);assert.equal(data.coverage.timeBasis,'feed_elapsed');
 });
 test('wrong match, incomplete archive, roster mismatch, frame gaps and contradictory totals cannot become ready',()=>{
- const variants=[f=>f.windows[0].esportsGameId='wrong',f=>f.windows[0].frames.at(-1).gameState='in_game',f=>f.options.players[0].champion='other',f=>f.windows[0].frames.splice(2,15),f=>f.options.players[0].gold=9000,f=>f.windows[0].frames[3].blueTeam.participants.pop()];
+ const variants=[f=>f.windows[0].esportsGameId='wrong',f=>f.windows[0].frames.at(-1).gameState='in_game',f=>f.options.players[0].champion='other',f=>f.windows[0].frames.splice(2,15),f=>f.options.players[0].gold=9000,f=>f.windows[0].frames[3].blueTeam.participants.pop(),f=>f.windows[0].frames[3]=null,f=>f.windows[0].gameMetadata.blueTeamMetadata.participantMetadata[0]=null,f=>f.options.sourceGameNumber=0];
  for(const change of variants){const f=fixture();change(f);assert.throws(()=>normalizeTimeline(f.windows,f.options),{code:'TIMELINE_INVALID'});}
+});
+test('champion display names map to source aliases and VOD links retain the correct set number',()=>{
+ const f=fixture();
+ f.options.players[0].champion='Wukong';
+ f.windows[0].gameMetadata.redTeamMetadata.participantMetadata[0].championId='MonkeyKing';
+ f.options.sourceGameNumber=3;
+ const result=normalizeTimeline(f.windows,f.options);
+ assert.equal(result.red.participants[0].champion,'Wukong');
+ assert.equal(result.source.url,'https://lolesports.com/vod/456/3');
+});
+test('changed source rosters and per-player contradictions are rejected even when team totals agree',()=>{
+ const inconsistent=fixture();
+ const next=structuredClone(inconsistent.windows[0]);
+ next.gameMetadata.blueTeamMetadata.participantMetadata[0].championId='Other';
+ assert.throws(()=>normalizeTimeline([...inconsistent.windows,next],inconsistent.options),{code:'TIMELINE_INVALID'});
+ const totals=fixture();
+ totals.options.players[0].gold=500;
+ totals.options.players[1].gold=700;
+ assert.throws(()=>normalizeTimeline(totals.windows,totals.options),{code:'TIMELINE_INVALID'});
+});
+test('only explicit pause/resume evidence adjusts the clock while unmarked frame gaps remain invalid',()=>{
+ const f=fixture(), frames=f.windows[0].frames;
+ for(let index=6;index<frames.length;index++)frames[index].rfc460Timestamp=new Date(Date.parse(frames[index].rfc460Timestamp)+100000).toISOString();
+ frames[5].gameState='paused';
+ const resumed=structuredClone(frames[5]);resumed.gameState='in_game';resumed.rfc460Timestamp=new Date(Date.parse(frames[5].rfc460Timestamp)+100000).toISOString();
+ frames.splice(6,0,resumed);
+ const result=normalizeTimeline(f.windows,f.options);
+ assert.equal(result.coverage.durationSeconds,23);
+ assert.equal(result.coverage.wallDurationSeconds,123);
+ assert.equal(result.coverage.pauseDurationSeconds,100);
+ assert.equal(result.coverage.largestGapSeconds,1);
+ assert.equal(result.coverage.largestWallGapSeconds,100);
+ assert.equal(result.coverage.timeBasis,'feed_elapsed_pause_adjusted');
+ assert.deepEqual(result.coverage.pauseIntervals,[{startTimestamp:frames[5].rfc460Timestamp,endTimestamp:resumed.rfc460Timestamp,durationSeconds:100}]);
+ frames[5].gameState='in_game';
+ assert.throws(()=>normalizeTimeline(f.windows,f.options),{code:'TIMELINE_INVALID'});
 });
 test('an imported timeline persists across service restarts; arbitrary game IDs never become file paths',async t=>{
  const directory=await fs.mkdtemp(path.join(os.tmpdir(),'dolgg-timeline-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));

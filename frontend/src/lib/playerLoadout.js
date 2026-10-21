@@ -1,5 +1,6 @@
 const normalize = value => String(value ?? '').toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
 const indexes = new WeakMap();
+const JUNGLE_PETS = new Map([['1101', ['red', '빨강', '1211']], ['1102', ['blue', '파랑', '1210']], ['1103', ['green', '초록', '1209']]]);
 function indexCatalog(catalog, properties) {
   if (!catalog || typeof catalog !== 'object') return new Map();
   let index = indexes.get(catalog);
@@ -41,8 +42,11 @@ export function matchingLoadout(data, player) {
 }
 export function findRoleQuest(value, catalog) {
   const item = findItem(value, catalog);
-  if (item) return item;
-  const generic = catalog?.['1205'];
-  if (value === 'Jungle Quest Reward' && generic?.name === value) return {...generic, id: '1205', generic: true};
+  return item?.name === 'Jungle Quest Reward' ? null : item;
+}
+export function findJunglePet(value, catalog) {
+  const pet = JUNGLE_PETS.get(String(value)), item = pet && findItem(String(value), catalog);
+  const artwork = pet && findItem(pet[2], catalog);
+  if (item && artwork?.image) return {...item, image: artwork.image, color: pet[0], colorLabel: pet[1]};
   return null;
 }

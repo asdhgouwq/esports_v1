@@ -3,21 +3,36 @@ import { Link } from 'react-router-dom';
 import { api } from '../lib/api';
 import { scheduleStatus, scheduleTime, selectSchedules, stageLabel } from '../lib/worlds';
 import WorldsHero from './WorldsHero';
+import TeamIdentity from './TeamIdentity';
 import '../styles/worlds.css';
 
 export default function WorldsHub({ compact = false }) {
   const [data, setData] = useState(null), [error, setError] = useState(''), [busy, setBusy] = useState(false);
+  const [timeline, setTimeline] = useState(null);
   const [filter, setFilter] = useState('all'), [search, setSearch] = useState(''), [page, setPage] = useState(1);
   const [revision, setRevision] = useState(0);
   const load = useCallback(() => setRevision(value => value + 1), []);
   useEffect(() => {
     const controller = new AbortController();
-    let timer;
+    let timer, timelineTimer, timelinePolling=false;
+    async function pollTimeline() {
+      let delay=30000;
+      try {
+        const value=await api.getWorldsTimelineStatus(controller.signal);
+        if(!controller.signal.aborted)setTimeline(value);
+        if(value.running)delay=3000;
+      } catch {} finally {
+        if(!controller.signal.aborted)timelineTimer=setTimeout(pollTimeline,delay);
+      }
+    }
     async function poll() {
       let delay = 30000;
       try {
         const value = await api.getWorlds(controller.signal);
-        if (!controller.signal.aborted) { setData(value); setError(''); }
+        if (!controller.signal.aborted) {
+          setData(value); setTimeline(value.timelineSync || null); setError('');
+          if(value.timelineSync&&!timelinePolling){timelinePolling=true;timelineTimer=setTimeout(pollTimeline,value.timelineSync.running?3000:30000);}
+        }
         if (value.running) delay = 3000;
       } catch (error) {
         if (!controller.signal.aborted) setError(error.message);
@@ -26,7 +41,7 @@ export default function WorldsHub({ compact = false }) {
       }
     }
     queueMicrotask(() => { if (!controller.signal.aborted) void poll(); });
-    return () => { controller.abort(); clearTimeout(timer); };
+    return () => { controller.abort(); clearTimeout(timer); clearTimeout(timelineTimer); };
   }, [revision]);
   const sync = async () => { setBusy(true); try { await api.syncWorlds(); load(); } catch(e) { setError(e.message); } finally { setBusy(false); } };
   const rows = data?.schedules || [], completed = rows.filter(r=>scheduleStatus(r)==='completed').length;
@@ -36,6 +51,7 @@ export default function WorldsHub({ compact = false }) {
     {compact ? <WorldsHero /> : <header className="worlds-heading"><div><span className="eyebrow">2026 WORLD CHAMPIONSHIP</span><h1>월즈 <span>일정 · 결과</span></h1><p>플레이인부터 결승까지, 대진과 세트 기록을 함께 확인하세요.</p></div><span className="worlds-year">WORLDS <strong>26</strong></span></header>}
     <div className="worlds-metrics"><div><span>전체 대진</span><strong>{data ? rows.length : '—'}</strong></div><div><span>종료된 시리즈</span><strong>{data ? completed : '—'}</strong></div><div><span>예정 · 결과 대기</span><strong>{data ? rows.filter(r=>scheduleStatus(r)==='scheduled').length : '—'}</strong></div><div><span>연결된 세트 기록</span><strong>{counts?.games ?? '—'}<small> / 선수 기록 {counts?.players ?? '—'}건</small></strong></div></div>
     <div className="worlds-sync"><div><span className={`worlds-sync-dot ${data?.running ? 'working' : ''}`} /><strong>{data?.running ? '월즈 데이터 갱신 중' : data?.enabled ? `${data.intervalMinutes}분마다 자동 갱신` : '수동 갱신'}</strong><small>{data?.running ? data.last?.message : data?.last?.sourceFetchedAt ? `최근 확인 ${new Date(data.last.sourceFetchedAt).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })} KST` : '원본 데이터 확인 대기'}</small></div><button type="button" onClick={sync} disabled={busy || data?.running}>{busy || data?.running ? '갱신 중…' : '↻ 지금 갱신'}</button></div>
+    {timeline&&<p className="worlds-timeline-status" role="status"><strong>경기 흐름 {timeline.ready}/{timeline.total}세트</strong><span>{timeline.running?'수집 중':timeline.pending>0?'확인 대기':timeline.total>0&&timeline.ready===timeline.total?'수집 완료':timeline.enabled?'자동 확인 중':'자동 수집 꺼짐'}</span>{timeline.unavailable>0&&<span>원본 미제공 {timeline.unavailable}세트</span>}{timeline.failed>0&&<span>재확인 필요 {timeline.failed}세트</span>}</p>}
     <p className="worlds-source-note">Leaguepedia 기준 · 모든 시간은 한국 시간(KST) · 이 Mac의 서버가 실행되는 동안 자동 갱신됩니다.</p>
     {data?.last?.state === 'failed' && <p role="alert" className="worlds-error">최근 갱신 실패: {data.last.message} 저장된 기록은 계속 볼 수 있습니다.</p>}
     {data?.last?.counts?.pendingDetails > 0 && <p className="worlds-source-note">선수 통계 또는 밴픽 {data.last.counts.pendingDetails}건은 원본 등록을 기다리고 있습니다.</p>}
@@ -48,7 +64,7 @@ export default function WorldsHub({ compact = false }) {
       const completed = status === 'completed', firstGame = row.games?.[0];
       return <article className={`worlds-fixture ${status}`} key={row.match_id}>
         <div className="worlds-fixture-meta"><span>{row.overview_page?.endsWith('/Play-In') ? 'PLAY-IN' : 'MAIN EVENT'} · {stageLabel(row.stage)}</span><time dateTime={row.datetime_utc || undefined}>{time.date} <b>{time.time}</b></time></div>
-        <div className="worlds-fixture-teams"><strong className={row.winner===row.team1 ? 'winner' : ''}>{row.team1 || '진출 팀 미정'}</strong><span className="worlds-score">{completed ? `${row.team1_score} : ${row.team2_score}` : row.team1_score !== null && row.team2_score !== null && (row.team1_score > 0 || row.team2_score > 0) ? `${row.team1_score} : ${row.team2_score}` : 'VS'}</span><strong className={row.winner===row.team2 ? 'winner' : ''}>{row.team2 || '진출 팀 미정'}</strong></div>
+        <div className="worlds-fixture-teams"><strong className={row.winner===row.team1 ? 'winner' : ''}><TeamIdentity name={row.team1 || '진출 팀 미정'} logoSide="end" /></strong><span className="worlds-score">{completed ? `${row.team1_score} : ${row.team2_score}` : row.team1_score !== null && row.team2_score !== null && (row.team1_score > 0 || row.team2_score > 0) ? `${row.team1_score} : ${row.team2_score}` : 'VS'}</span><strong className={row.winner===row.team2 ? 'winner' : ''}><TeamIdentity name={row.team2 || '진출 팀 미정'} /></strong></div>
         <div className="worlds-fixture-bottom"><span className="worlds-status">{completed ? '경기 종료' : status==='cancelled' ? '무효 경기' : '예정 · 결과 대기'}{row.best_of ? ` · BO${row.best_of}` : ''}</span>{firstGame ? <Link to={`/match/${encodeURIComponent(firstGame.game_id)}`}>세트 {row.games.length}개 · 기록 보기 ↗</Link> : <span>세트 기록 대기</span>}</div>
       </article>;
     })}</div>

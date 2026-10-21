@@ -3,6 +3,7 @@ import { buildMatchSummary, matchReviewKey } from '../lib/matchSummary';
 import { formatGameLength } from '../lib/utils';
 import '../styles/match-summary.css';
 import AiMatchSummary from './AiMatchSummary';
+import TeamIdentity from './TeamIdentity';
 
 export default function MatchSummary({ games, match, gameId, loading, error, onSelectSet }) {
   const summary = useMemo(() => buildMatchSummary(games), [games]);
@@ -16,9 +17,9 @@ export default function MatchSummary({ games, match, gameId, loading, error, onS
     <section className="series-result" aria-labelledby="series-result-title">
       <div className="series-section-heading"><h3 id="series-result-title">시리즈 결과</h3><span>{loading ? '기록 불러오는 중' : error ? '기록 조회 실패' : hasResults ? `${summary.confirmed}세트 결과 확인` : '기록 대기'}</span></div>
       <div className="series-summary-score">
-        <strong>{summary.teams[0] || '팀 정보 대기'}</strong>
+        <strong><TeamIdentity name={summary.teams[0]} logoSide="end" /></strong>
         <span aria-label={hasResults ? `${summary.score[0]} 대 ${summary.score[1]}` : '스코어 미확인'}>{hasResults ? summary.score[0] : '—'}<i>:</i>{hasResults ? summary.score[1] : '—'}</span>
-        <strong>{summary.teams[1] || '팀 정보 대기'}</strong>
+        <strong><TeamIdentity name={summary.teams[1]} /></strong>
       </div>
       <p className="series-result-note">수집된 세트 기록 기준 · 최종 결과는 전체 기록 확인 후 확정됩니다.</p>
       <dl className="series-summary-metrics">

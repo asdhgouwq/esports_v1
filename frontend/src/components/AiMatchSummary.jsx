@@ -1,14 +1,22 @@
+import {useState} from 'react';
 import { useAiSummary } from '../hooks/useAiSummary';
 import '../styles/ai-summary.css';
 import ChatGptConnection from './ChatGptConnection';
 import { useChatGpt } from '../contexts/appContexts';
 
-export default function AiMatchSummary({ gameId, scope = 'series', available, loading, dataError, setNumber }) {
+export default function AiMatchSummary(props) {
+  const [visited, setVisited] = useState(false);
+  const title = props.scope === 'game' ? `${props.setNumber}세트 AI 요약` : 'AI 경기 총평';
+  return <details className="ai-summary-disclosure" onToggle={event => {if (event.currentTarget.open) setVisited(true);}}>
+    <summary><strong><span aria-hidden="true">✦</span> {title}</strong><span className="ai-summary-toggle"><span className="when-closed">펼치기</span><span className="when-open">접기</span><i aria-hidden="true">⌄</i></span></summary>
+    {visited && <AiSummaryContent {...props}/>}
+  </details>;
+}
+
+function AiSummaryContent({ gameId, scope = 'series', available, loading, dataError }) {
   const auth = useChatGpt();
   const result = useAiSummary(gameId, scope, available && !loading && !dataError);
   const state = loading ? 'loading_data' : dataError ? 'data_error' : !available ? 'waiting_for_data' : result.state;
-  const title = scope === 'series' ? 'AI 경기 총평' : `${setNumber}세트 AI 요약`;
-  const headingId = `ai-summary-${scope}-title`;
   const ready = state === 'ready' && result.report;
   const description = scope === 'series'
     ? '전체 결과와 세트별 흐름을 AI가 알기 쉽게 풀어드립니다.'
@@ -26,8 +34,7 @@ export default function AiMatchSummary({ gameId, scope = 'series', available, lo
   };
   const [stateTitle, stateDescription] = states[state] || states.error;
 
-  return <section className="ai-match-summary" aria-labelledby={headingId} aria-busy={state === 'loading' || state === 'loading_data'}>
-    <header className="ai-summary-header"><div><span className="eyebrow">{scope === 'series' ? 'AI MATCH RECAP' : 'AI SET RECAP'}</span><h3 id={headingId}><span aria-hidden="true">✦</span> {title}</h3></div><span className="ai-summary-badge">AI 분석</span></header>
+  return <section className="ai-match-summary" aria-label={scope === 'series' ? 'AI 경기 총평 내용' : 'AI 세트 요약 내용'} aria-busy={state === 'loading' || state === 'loading_data'}>
     <p className="ai-summary-description">{description}</p>
     <ChatGptConnection />
     {ready ? <>

@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {findRune,findSpell,findItem,findRoleQuest,matchingLoadout} from './playerLoadout.js';
+import {findRune,findSpell,findItem,findRoleQuest,findJunglePet,matchingLoadout} from './playerLoadout.js';
 test('rune and spell catalogs resolve source names and avoid alternate game modes',()=>{
  assert.equal(findRune(null,[{id:8000,name:'Precision'}]),null);
  assert.equal(findRune('Conqueror',[{id:8010,name:'Conqueror',icon:'rune.png'}]).id,8010);
@@ -23,10 +23,16 @@ test('item names resolve standard icons, preserve unknowns and never reuse anoth
  for(const patch of [{game_id:'g2'},{name:'B'},{team:'U'},{champion:'Gnar'}])assert.equal(matchingLoadout({state:'ready',gameId:'g1',players:[row]},{...player,...patch}),null);
 });
 
-test('role quest slot uses source item and only a generic jungle icon when pet variant is absent',()=>{
+test('role quest slot preserves non-jungle quests and never substitutes a generic reward for a pet',()=>{
  const catalog={'1205':{name:'Jungle Quest Reward',image:{full:'1205.png'}},'1209':{name:'Jungle Quest Reward',image:{full:'1209.png'}},'1221':{name:'Top Lane Quest Reward',image:{full:'1221.png'}}};
  assert.equal(findRoleQuest('Top Lane Quest Reward',catalog).id,'1221');
- assert.equal(findRoleQuest('Jungle Quest Reward',catalog).id,'1205');
- assert.equal(findRoleQuest('Jungle Quest Reward',catalog).generic,true);
+ assert.equal(findRoleQuest('Jungle Quest Reward',catalog),null);
+ assert.equal(findRoleQuest('1209',catalog),null);
  assert.equal(findRoleQuest('Missing Quest',catalog),null);assert.equal(findRoleQuest(null,catalog),null);
+});
+
+test('only recorded pet IDs select the red, blue or green companion icon',()=>{
+ const catalog={'1101':{name:'Scorchclaw Pup',image:{full:'1101.png'}},'1102':{name:'Gustwalker Hatchling',image:{full:'1102.png'}},'1103':{name:'Mosstomper Seedling',image:{full:'1103.png'}},'1209':{name:'Jungle Quest Reward',image:{full:'1209.png'}},'1210':{name:'Jungle Quest Reward',image:{full:'1210.png'}},'1211':{name:'Jungle Quest Reward',image:{full:'1211.png'}}};
+ for(const [id,color,icon] of [['1101','red','1211.png'],['1102','blue','1210.png'],['1103','green','1209.png']]) {const pet=findJunglePet(id,catalog);assert.equal(pet.id,id);assert.equal(pet.color,color);assert.equal(pet.image.full,icon);}
+ for(const value of [null,'Jungle Quest Reward','1205','constructor'])assert.equal(findJunglePet(value,catalog),null);
 });

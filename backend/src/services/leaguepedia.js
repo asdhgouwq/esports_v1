@@ -10,6 +10,13 @@ class LeaguepediaError extends Error {
   }
 }
 const literal = (value) => String(value).replace(/\\/g, '\\\\').replace(/'/g, "''");
+const draftQuery = {
+  tables: 'PicksAndBansS7=PB,MatchScheduleGame=MSG',
+  join_on: 'PB.GameId=MSG.GameId',
+  fields: ['PB.GameId=GameId', 'PB.Team1=Team1', 'PB.Team2=Team2', 'PB.SwitchedSides=SwitchedSides',
+    'MSG.Blue=Blue', 'MSG.Red=Red', 'MSG.Selection=SideSelection', 'MSG.PickSelection=PickSelection', 'MSG.FirstPick=FirstPick', 'MSG.FirstSelection=FirstSelection',
+    ...[1, 2].flatMap(team => ['Ban', 'Pick'].flatMap(kind => Array.from({length: 5}, (_, index) => `PB.Team${team}${kind}${index + 1}=Team${team}${kind}${index + 1}`)))].join(','),
+};
 async function readJson(file) { try { return JSON.parse(await fs.readFile(file, 'utf8')); } catch { return null; } }
 async function writeJson(file, value) {
   await fs.mkdir(path.dirname(file), { recursive: true, mode: 0o700 });
@@ -148,8 +155,7 @@ class LeaguepediaService {
     progress('월즈 선수별 통계 조회 중');
     const players = await collect({ tables: 'ScoreboardPlayers', fields: 'GameId,Link=Name,Team,Role,Champion,Kills,Deaths,Assists,Gold,CS,DamageToChampions,Items__full=Items,Trinket,PrimaryTree,KeystoneRune=Keystone', where: `OverviewPage LIKE '${literal(root)}%'`, order_by: 'GameId,Link' });
     progress('월즈 밴픽 순서 조회 중');
-    const fields = ['GameId', 'Team1', 'Team2', ...[1, 2].flatMap((team) => ['Ban', 'Pick'].flatMap((kind) => Array.from({ length: 5 }, (_, index) => `Team${team}${kind}${index + 1}`)))];
-    const drafts = await collect({ tables: 'PicksAndBansS7', fields: fields.join(','), where: `OverviewPage LIKE '${literal(root)}%'`, order_by: 'GameId' });
+    const drafts = await collect({ ...draftQuery, where: `PB.OverviewPage LIKE '${literal(root)}%'`, order_by: 'PB.GameId' });
     return { year, root, source: 'Leaguepedia', fetchedAt: new Date(this.now()).toISOString(), schedules, games, players, drafts };
   }
   async getRecentMatches(tournamentName = 'LCK%', limit = 1) {
@@ -163,8 +169,7 @@ class LeaguepediaService {
     return this.cargoQuery({ tables: 'ScoreboardPlayers', fields: 'GameId,Link=Name,Team,Role,Champion,Kills,Deaths,Assists,Gold,CS,DamageToChampions,Items__full=Items,Trinket,PrimaryTree,KeystoneRune=Keystone', where: `GameId = '${literal(gameId)}'`, limit: 20 });
   }
   async getDraft(gameId) {
-    const fields = ['GameId', 'Team1', 'Team2', ...[1, 2].flatMap((team) => ['Ban', 'Pick'].flatMap((kind) => Array.from({ length: 5 }, (_, index) => `Team${team}${kind}${index + 1}`)))];
-    return this.cargoQuery({ tables: 'PicksAndBansS7', fields: fields.join(', '), where: `GameId = '${literal(gameId)}'`, limit: 2 }, { timeout: 12000 });
+    return this.cargoQuery({ ...draftQuery, where: `PB.GameId = '${literal(gameId)}'`, limit: 2 }, { timeout: 12000 });
   }
 }
 

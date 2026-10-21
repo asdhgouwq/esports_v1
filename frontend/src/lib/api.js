@@ -14,6 +14,7 @@ async function apiFetch(path, options = {}) {
 
 export const api = {
   getWorlds: (signal) => apiFetch('/api/worlds', { signal }),
+  getWorldsTimelineStatus: (signal) => apiFetch('/api/worlds/timelines/status', { signal }),
   syncWorlds: () => apiFetch('/api/worlds/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }),
   leaguepediaStatus: () => apiFetch('/api/leaguepedia/status'),
   leaguepediaConnect: (credentials) => apiFetch('/api/leaguepedia/connect', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(credentials) }),

@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import TeamIdentity from '../components/TeamIdentity';
 import { useMatchData } from '../hooks/useMatchData';
 import { LoadingSpinner, ErrorMessage, EmptyState, SectionTitle } from '../components/ui';
 
@@ -57,7 +58,7 @@ export default function StandingsPage() {
                   <tr key={row.team} className="border-b border-white/5 hover:bg-white/3 transition-colors">
                     <td className="px-4 py-3 text-gray-600 font-mono text-xs">{idx + 1}</td>
                     <td className="px-4 py-3">
-                      <span className="font-bold text-white">{row.team}</span>
+                      <TeamIdentity name={row.team} className="font-bold text-white" />
                     </td>
                     <td className="px-4 py-3 text-center font-mono text-green-400">{row.wins}</td>
                     <td className="px-4 py-3 text-center font-mono text-red-400">{row.losses}</td>

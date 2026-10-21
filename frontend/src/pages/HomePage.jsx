@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import CompetitionNav from '../components/CompetitionNav';
 import WorldsHub from '../components/WorldsHub';
 import RecentMatches from '../components/RecentMatches';
+import {TeamLogo} from '../components/TeamIdentity';
 import { belongsToCompetition } from '../config/competitions';
 import { useMatchData } from '../hooks/useMatchData';
 import { useDDragon } from '../contexts/appContexts';
@@ -10,7 +11,6 @@ import { getChampionImageUrl, formatGameLength } from '../lib/utils';
 import '../styles/dashboard.css';
 
 const split = (value) => (value || '').split(',').map((s) => s.trim()).filter(Boolean);
-const initials = (name = '') => name.split(' ').map((s) => s[0]).join('').slice(0, 3).toUpperCase();
 export default function HomePage({ competition: selectedCompetition, group }) {
   const { matches, loading, error, refetch } = useMatchData(selectedCompetition ? { limit: 200 } : { limit: 200, expand_series: 'true' });
   const { version } = useDDragon();
@@ -56,7 +56,7 @@ export default function HomePage({ competition: selectedCompetition, group }) {
       <div className="match-filters"><label className="search-field"><span aria-hidden="true">⌕</span><input aria-label="팀 또는 대회 검색" placeholder="팀 또는 대회 검색" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} /></label><select aria-label="대회 필터" value={activeTournament} onChange={(e) => { setTournament(e.target.value); setPage(1); }}><option value="">전체 시즌 · 대회</option>{tournaments.map((t) => <option key={t}>{t}</option>)}</select><select aria-label="경기 정렬" value={sort} onChange={(e) => { setSort(e.target.value); setPage(1); }}><option value="newest">최신 경기순</option><option value="longest">경기 시간순</option></select></div>
       <div className="table-scroll"><table className="match-table"><thead><tr><th>날짜 / 대회</th><th>BLUE SIDE</th><th>결과</th><th>RED SIDE</th><th>시간 / 패치</th><th><span className="sr-only">상세</span></th></tr></thead><tbody>{ready && filtered.slice((current - 1) * 12, current * 12).map((m) => <tr key={m.game_id}>
         <td><span className="match-date">{m.datetime_utc ? new Date(m.datetime_utc).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }) : '날짜 미정'}</span><small>{m.tournament}</small></td>
-        <td><Team name={m.team1} picks={m.team1_picks} version={version} /></td><td className="result-cell"><span className={m.win_team === m.team1 ? 'win-mark' : ''}>{m.win_team ? (m.win_team === m.team1 ? 'W' : 'L') : '—'}</span><i>:</i><span className={m.win_team === m.team2 ? 'win-mark' : ''}>{m.win_team ? (m.win_team === m.team2 ? 'W' : 'L') : '—'}</span></td><td><Team name={m.team2} picks={m.team2_picks} version={version} red /></td>
+        <td><Team name={m.team1} picks={m.team1_picks} version={version} /></td><td className="result-cell"><span className={m.win_team === m.team1 ? 'win-mark' : ''}>{m.win_team ? (m.win_team === m.team1 ? 'W' : 'L') : '—'}</span><i>:</i><span className={m.win_team === m.team2 ? 'win-mark' : ''}>{m.win_team ? (m.win_team === m.team2 ? 'W' : 'L') : '—'}</span></td><td><Team name={m.team2} picks={m.team2_picks} version={version} /></td>
         <td className="duration-cell">{formatGameLength(m.gamelength_number)}<small>{m.patch ? `Patch ${m.patch}` : '패치 미기록'}</small></td><td><Link className="match-detail-link" to={`/match/${encodeURIComponent(m.game_id)}`} aria-label={`${m.team1} 대 ${m.team2} 경기 상세`}>↗</Link></td>
       </tr>)}</tbody></table></div>
       {loading && <div className="database-state" role="status"><div className="loading-line" />경기 데이터를 불러오고 있습니다.</div>}
@@ -68,4 +68,4 @@ export default function HomePage({ competition: selectedCompetition, group }) {
   </div>;
 }
 function Metric({ label, value, unit, detail }) { return <div className="metric"><span>{label}</span><div><strong>{value}</strong><small>{unit}</small></div><p>{detail}</p></div>; }
-function Team({ name, picks, version, red }) { return <div className="team-cell"><span className={`team-monogram ${red ? 'red' : ''}`}>{initials(name)}</span><div><strong>{name}</strong><div className="compact-picks">{split(picks).map((c) => <img key={c} src={getChampionImageUrl(version, c)} alt={c} title={c} onError={(e) => { e.currentTarget.style.visibility = 'hidden'; }} />)}</div></div></div>; }
+function Team({ name, picks, version }) { return <div className="team-cell"><TeamLogo name={name} /><div><strong>{name}</strong><div className="compact-picks">{split(picks).map((c) => <img key={c} src={getChampionImageUrl(version, c)} alt={c} title={c} onError={(e) => { e.currentTarget.style.visibility = 'hidden'; }} />)}</div></div></div>; }

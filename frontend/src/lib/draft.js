@@ -20,19 +20,23 @@ export function draftSlots(value) {
   });
 }
 
-export const PICK_TURNS = { blue: [1, 4, 5, 8, 9], red: [2, 3, 6, 7, 10] };
+export const PICK_TURNS = { first: [1, 4, 5, 8, 9], second: [2, 3, 6, 7, 10] };
 
 export function draftSequence(game, draft) {
-  const sides = [draft?.blue, draft?.red];
+  const sides = draft?.sidesConfirmed ? [draft.blue, draft.red] : draft?.teams;
   const valid = game && draft?.state === 'ready' && draft.gameId === game.game_id && draft.format === 'tournament'
+    && Array.isArray(sides) && sides.length === 2
     && sides.every((side) => side && [game.team1, game.team2].includes(side.team)
       && ['picks', 'bans'].every((kind) => Array.isArray(side[kind]) && side[kind].length === 5))
-    && draft.blue.team !== draft.red.team;
-  if (!valid) return { game, ordered: false, firstPickSide: null };
+    && sides[0].team !== sides[1].team && sides.some(side => side.team === draft.firstPickTeam);
+  if (!valid) return { game, ordered: false, firstPickTeam: null, sidesConfirmed: false, selections: {} };
+  const teamNames = sides.map(side => side.team);
+  const selection = value => teamNames.includes(value) ? value : null;
   return {
-    ordered: true, firstPickSide: draft.firstPickSide === 'blue' ? 'blue' : null,
-    game: { ...game, team1: draft.blue.team, team2: draft.red.team,
-      team1_picks: draft.blue.picks, team2_picks: draft.red.picks, team1_bans: draft.blue.bans, team2_bans: draft.red.bans },
+    ordered: true, firstPickTeam: draft.firstPickTeam, sidesConfirmed: Boolean(draft.sidesConfirmed),
+    selections: {side: selection(draft.selections?.side), pick: selection(draft.selections?.pick)},
+    game: { ...game, team1: sides[0].team, team2: sides[1].team,
+      team1_picks: sides[0].picks, team2_picks: sides[1].picks, team1_bans: sides[0].bans, team2_bans: sides[1].bans },
   };
 }
 

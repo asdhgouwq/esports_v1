@@ -1,3 +1,4 @@
+export const dragonNames={chemtech:'화학공학',hextech:'마법공학',cloud:'바람',infernal:'화염',mountain:'대지',ocean:'바다',elder:'장로'};
 export const objectiveLabels = { dragon: '용', void_grubs: '유충', baron: '바론', herald: '전령', first_blood: '퍼스트블러드', first_tower: '첫 포탑' };
 // Firsts refer to the entire game, never each team's first occurrence.
 export function objectiveTimeline(data) {

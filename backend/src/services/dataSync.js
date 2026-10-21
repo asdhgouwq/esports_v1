@@ -42,7 +42,7 @@ function normalizeBundle(game, players, drafts, { requireDraft = true } = {}) {
     if (new Set(teamPlayers.map((player) => championKey(player.Champion))).size !== 5) fail('선수의 챔피언 기록이 중복됩니다.');
   }
   const draft = drafts.length === 1 ? normalizeDraft(drafts[0], match) : null;
-  if (requireDraft && (!draft || ![draft.blue, draft.red].every((side) => side.picks.every(Boolean) && side.bans.every(Boolean)))) fail('선택 순서와 밴 10개가 모두 확인되는 경기만 가져올 수 있습니다.');
+  if (requireDraft && (!draft || !draft.teams.every((team) => team.picks.every(Boolean) && team.bans.every(Boolean)))) fail('선택 순서와 밴 10개가 모두 확인되는 경기만 가져올 수 있습니다.');
   const stats = players.map((player) => {
     const items = String(player.Items || '').split(';');
     // Leaguepedia may return item names. Only numeric IDs are valid DDragon IDs.

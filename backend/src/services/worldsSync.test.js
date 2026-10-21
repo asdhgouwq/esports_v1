@@ -40,7 +40,7 @@ async function fixture(t, options = {}) {
   const saved = { matches: new Map(), player_stats: new Map(), game_drafts: new Map(), match_schedules: new Map() };
   let writes = 0;
   const db = { from: table => ({ upsert(rows,{onConflict}) { writes++; for (const row of rows) saved[table].set(row[onConflict],row); return { select: async () => options.failTable===table ? {error:{code:'42501'}} : { data: rows.map(r=>({[onConflict]:r[onConflict]})) } }; } }) };
-  const sync = createWorldsSync({ db, source: options.source || {getWorldsSnapshot:async()=>snapshot()}, storageDir, serverConfigured:()=>options.key !== false, enabled:false });
+  const sync = createWorldsSync({ db, source: options.source || {getWorldsSnapshot:async()=>snapshot()}, storageDir, serverConfigured:()=>options.key !== false, enabled:false, onSynced:options.onSynced });
   return { sync, saved, writes:()=>writes };
 }
 test('concurrent manual requests share one job, upserts are idempotent and failures never report completion', async t => {
@@ -59,14 +59,18 @@ test('concurrent manual requests share one job, upserts are idempotent and failu
   const noKey = await fixture(t,{key:false}); noKey.sync.startSync(); await noKey.sync.wait(); assert.equal(noKey.writes(),0); assert.equal(noKey.sync.status().last.code,'SERVER_KEY_REQUIRED');
 });
 
-test('draft side order controls blue/red columns without changing the winner or team identity',()=>{
+test('red first pick does not swap actual map sides, winner or champion compositions',()=>{
   const picks = ['A','B','C','D','E','F','G','H','I','J'];
   const raw={...game, Team1Picks:picks.slice(0,5).join(','),Team2Picks:picks.slice(5).join(','),Team1Bans:'K,L,M,N,O',Team2Bans:'P,Q,R,S,T'};
-  const draft={GameId:game.GameId,Team1:'B',Team2:'A'};
+  const draft={GameId:game.GameId,Team1:'B',Team2:'A',SwitchedSides:'1',Blue:'A',Red:'B',FirstPick:'B'};
   for(let i=0;i<5;i++){draft[`Team1Pick${i+1}`]=picks[i+5];draft[`Team2Pick${i+1}`]=picks[i];draft[`Team1Ban${i+1}`]='PQRST'[i];draft[`Team2Ban${i+1}`]='KLMNO'[i];}
   const bundle=prepareSnapshot({...snapshot(),games:[raw],drafts:[draft]});
-  assert.equal(bundle.matches[0].team1,'B');assert.equal(bundle.matches[0].team2,'A');assert.equal(bundle.matches[0].win_team,'A');
-  assert.equal(bundle.matches[0].team1_picks,'F,G,H,I,J');assert.equal(bundle.matches[0].team1_bans,'P,Q,R,S,T');
+  assert.equal(bundle.matches[0].team1,'A');assert.equal(bundle.matches[0].team2,'B');assert.equal(bundle.matches[0].win_team,'A');
+  assert.equal(bundle.matches[0].team1_picks,'A,B,C,D,E');assert.equal(bundle.matches[0].team1_bans,'K,L,M,N,O');
+  const unknown = {...draft}; for(const field of ['SwitchedSides','Blue','Red','FirstPick']) delete unknown[field];
+  assert.equal(prepareSnapshot({...snapshot(),games:[raw],drafts:[unknown]}).matches[0].team1,'A');
+  const changed = {...draft,SwitchedSides:'0',Blue:'B',Red:'A'};
+  assert.equal(prepareSnapshot({...snapshot(),games:[raw],drafts:[changed]}).matches[0].team1,'B');
 });
 test('automatic sync starts on boot, schedules the next run, and honors a longer source cooldown',async t=>{
   const storageDir=await fs.mkdtemp(path.join(os.tmpdir(),'dol-worlds-timer-'));t.after(()=>fs.rm(storageDir,{recursive:true,force:true}));
@@ -77,4 +81,43 @@ test('automatic sync starts on boot, schedules the next run, and honors a longer
   assert.equal(sync.status().last.state,'complete'); assert.equal(delay,900000);
   limited=true; callback();await sync.wait();assert.equal(sync.status().last.state,'failed');assert.equal(delay,1800000);
   sync.stop();assert.equal(sync.status().enabled,false);assert.equal(sync.status().nextRunAt,null);
+});
+test('timeline work starts only after a successful sync and cannot delay or fail its completion',async t=>{
+  let calls=0,finish;
+  const callback=new Promise(resolve=>{finish=resolve;});
+  const f=await fixture(t,{onSynced:()=>{calls++;return callback;}});
+  f.sync.startSync();await f.sync.wait();
+  assert.equal(calls,1);assert.equal(f.sync.status().last.state,'complete');
+  finish();
+  const failed=await fixture(t,{failTable:'match_schedules',onSynced:()=>{calls++;}});
+  failed.sync.startSync();await failed.sync.wait();assert.equal(calls,1);
+  for(const onSynced of [()=>{throw new Error('timeline failure');},async()=>{throw new Error('timeline failure');}]){
+    const isolated=await fixture(t,{onSynced});isolated.sync.startSync();await isolated.sync.wait();
+    assert.equal(isolated.sync.status().last.state,'complete');
+  }
+});
+test('Worlds event includes current timeline progress without persisting a stale copy',async()=>{
+  const rows={match_schedules:[normalizeSchedule(schedule(),'now')],matches:[{game_id:game.GameId,match_id:game.MatchId,game_number:2}]};
+  const db={from:table=>({select:()=>({like:()=>({order:()=>({limit:async()=>({data:rows[table]})})})})})};
+  let progress={running:true,total:22,ready:1};
+  const sync=createWorldsSync({db,getTimelineStatus:()=>progress});
+  assert.deepEqual((await sync.event()).timelineSync,progress);
+  progress={running:false,total:22,ready:22};
+  const event=await sync.event();assert.deepEqual(event.timelineSync,progress);
+  assert.equal(event.schedules[0].games[0].game_id,game.GameId);
+});
+test('timeline status and sync routes retain the local origin guard',async t=>{
+  const express=require('express'),{once}=require('node:events');
+  const {createWorldsRouter}=require('../api/worldsRoutes');
+  let starts=0;
+  const timelineSync={status:()=>({running:false,ready:1,total:22}),startSync:()=>{starts++;return{running:true};}};
+  const app=express();app.use('/api',createWorldsRouter({}, {timelineSync}));
+  const server=app.listen(0,'127.0.0.1');await once(server,'listening');
+  t.after(()=>new Promise(resolve=>{server.closeAllConnections();server.close(resolve);}));
+  const base=`http://127.0.0.1:${server.address().port}/api/worlds/timelines`;
+  const status=await fetch(`${base}/status`);assert.equal(status.status,200);assert.equal((await status.json()).ready,1);
+  const blocked=await fetch(`${base}/sync`,{method:'POST',headers:{Origin:'https://other.example','Content-Type':'application/json'},body:'{}'});
+  assert.equal(blocked.status,403);assert.equal(starts,0);
+  const started=await fetch(`${base}/sync`,{method:'POST',headers:{Origin:'http://127.0.0.1:5173','Content-Type':'application/json'},body:'{}'});
+  assert.equal(started.status,202);assert.deepEqual(await started.json(),{running:true});assert.equal(starts,1);
 });

@@ -2,6 +2,7 @@ const fs = require('node:fs/promises');
 const path = require('node:path');
 const {createHash, randomUUID} = require('node:crypto');
 const {attachPlayerTeams} = require('./playerTeams');
+const {attachJunglePets} = require('./junglePets');
 const fields = 'GameId,Link=Name,Team,Champion,PrimaryTree,SecondaryTree,KeystoneRune=Keystone,SummonerSpells__full=SummonerSpells,Items__full=Items,Trinket,RoleBoundItem';
 const fileName = id => `${createHash('sha256').update(id).digest('hex')}.json`;
 const clean = value => typeof value === 'string' && value.trim() ? value.trim().slice(0, 160) : null;
@@ -27,7 +28,7 @@ function validSaved(saved, roster, gameId, now) {
       && Array.isArray(row.spells) && row.spells.length === 2 && row.spells.every(text)
       && ['primaryTree', 'secondaryTree', 'keystone', 'trinket', 'roleBoundItem'].every(key => text(row[key])));
 }
-function createPlayerLoadoutService({db, source, directory = path.resolve(__dirname, '../../data/player-loadouts'), now = () => Date.now()} = {}) {
+function createPlayerLoadoutService({db, source, getTimeline = async () => null, directory = path.resolve(__dirname, '../../data/player-loadouts'), now = () => Date.now()} = {}) {
   const pending = new Map();
   const memory = new Map();
   async function load(gameId) {
@@ -60,7 +61,8 @@ function createPlayerLoadoutService({db, source, directory = path.resolve(__dirn
     if (cached?.expiresAt > now()) return Promise.resolve(cached.value);
     if (pending.has(gameId)) return pending.get(gameId);
     if (pending.size >= 8) return Promise.reject(new Error('Loadout requests busy'));
-    const task = load(gameId).then(value => {
+    const task = load(gameId).then(async value => {
+      value = attachJunglePets(value, await getTimeline(gameId).catch(() => null));
       memory.set(gameId, {value, expiresAt: now() + 60000});
       if (memory.size > 100) memory.delete(memory.keys().next().value);
       return value;

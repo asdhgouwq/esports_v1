@@ -139,8 +139,8 @@ Preview(경기 전) / 1~5세트 / 요약으로 나누는 것이었고, 틀과 �
 
 11. 첨부 이미지 기준 밴픽 순서 표시 (2026-10-19)
 - 세로 조합 카드를 팀별 Bans/Picks 두 줄의 원형 초상화로 바꿨다. 넓은 화면은 양 팀 좌우 배치, 좁은 화면은 팀별 위아래 배치다.
-- 밴 3|2, 블루 픽 1|2|2, 레드 픽 2|2|1 구분선을 넣었다. 확인된 순서에만 1st 선픽과 전체 픽 1~10번을 표시한다.
-- 전체 픽 번호: 블루 [1,4,5,8,9], 레드 [2,3,6,7,10]. 포지션순으로 다시 정렬하지 않는다.
+- 밴 3|2, 선픽 팀 픽 1|2|2, 후픽 팀 픽 2|2|1 구분선을 넣었다. 확인된 선픽에만 1st를 표시하며 전체 픽 순서는 툴팁으로 제공한다.
+- 전체 픽 번호: 선픽 팀 [1,4,5,8,9], 후픽 팀 [2,3,6,7,10]. 실제 블루·레드 진영과 독립적으로 계산하며 포지션순으로 다시 정렬하지 않는다.
 - GET /api/matches/:gameId/draft는 DB에서 실제 경기 존재를 확인한 후 Leaguepedia PicksAndBansS7의 Team1/2Pick1~5, Ban1~5를 조회한다. GameId/양 팀/완전한 최종 픽 구성을 검증하고 반환한다.
 - DB 스키마 변경이나 데이터 쓰기 없이 조회 결과를 메모리에 캐시한다. 동일 요청 중복 제거, 동시 조회 2개 제한, 원본 요청 제한 시 10분 대기를 적용한다.
 - 원본 순서가 없거나 조회 실패 시 최종 목록으로 돌아가고 선픽·픽 번호·순서 구분선은 붙이지 않는다. 빈 상태는 자리만 표시한다.
@@ -202,8 +202,9 @@ Preview(경기 전) / 1~5세트 / 요약으로 나누는 것이었고, 틀과 �
 - 실제 최초 수집/DB 검증: 대진 46개 = 종료 6시리즈 + 예정/결과 대기 40시리즈.
   종료 22세트, 선수 기록 220개, 검증된 밴픽 순서 22개. 세부 기록 미완료 0개.
   현재 종료 결과는 플레이인 기록이며 본선은 원본의 예정 대진으로 표시.
-- ScoreboardGames 팀 순서와 실제 블루/레드 순서가 다를 수 있어 검증된
-  PicksAndBansS7 순서를 기준으로 각 세트 팀/픽/밴 칼럼 정렬. 승리 팀 정체성 유지.
+- MatchScheduleGame.Blue/Red와 PicksAndBansS7.SwitchedSides로 실제 진영을 확인한다.
+  PicksAndBansS7.Team1은 선픽 팀이므로 진영 순서로 취급하지 않는다.
+  Selection은 진영 선택 팀, PickSelection은 픽 순서 선택 팀, FirstPick은 실제 선픽 팀이다.
 - 실제 세트 번호를 저장/상세 탭/총평/AI 근거에 반영. 누락된 앞 세트를 임의 재번호하지 않음.
 - WORLDS_AUTO_SYNC=true, WORLDS_YEAR=2026, WORLDS_SYNC_INTERVAL_MINUTES=15.
   backend 기동 시 갱신, 완료 후 15분마다 재조회. 동시 요청은 단일 작업 공유.
@@ -232,3 +233,27 @@ Preview(경기 전) / 1~5세트 / 요약으로 나누는 것이었고, 틀과 �
 - /schedule은 기존 제목 유지. 데이터 수집과 경기 기능 변경 없음.
 - 데스크톱/390px 모바일 확인, 월즈 표의 sr-only 요소로 생기던 가로 넘침 수정.
   frontend 14 tests, production build, git diff --check 통과.
+
+16. 2026-10-20: 월즈 종료 세트 경기 흐름 자동 수집
+- 공식 lolesports.com 월즈 공개 일정에서 정확한 event/game ID를 추출한다.
+  팀명 별칭·세트 번호·날짜로 Leaguepedia 기록과 연결하고 모호한 후보는 거부한다.
+- 22종료 세트의 무료 LiveStats 첫 구간 200 응답과 경기 ID·선수 10명을 확인했다.
+  전체 기록은 순차 수집·검증 후 backend/data/timelines에 저장한다.
+  첫 구간 제공과 전체 타임라인 검증 완료는 서로 다른 상태다.
+- backend/src/services/worldsTimelineSync.js: 기동·기본 월즈 갱신 후 자동 확인,
+  중복 작업 방지, 구간 캐시 재사용, 작업 상태 보존, 429 전체 대기와 재시도.
+  손상되거나 최신 경기 기록과 불일치하는 저장본은 격리 후 재수집한다.
+- WORLDS_TIMELINE_AUTO_SYNC=false로 경기 흐름 자동 수집만 중지 가능.
+  기본값은 WORLDS_AUTO_SYNC를 따른다. 로컬 백엔드가 켜져 있을 때 동작한다.
+- /api/worlds/timelines/status 및 POST /api/worlds/timelines/sync 추가.
+  기존 loopback·Host·Origin·JSON 검사 유지. 비밀키 추가 발급 불필요.
+- 월즈 허브는 전용 상태 API로 진행 수치를 표시한다. 경기 상세는 대기 중
+  자동 확인하고 검증된 데이터가 준비되면 골드 그래프와 주요 이벤트를 표시한다.
+- 발표용 별도 배포본에는 자동 반영되지 않는다. 정규화한 공개 JSON만 Git 대상이며,
+  원본 캐시·작업 상태·격리 파일은 Git에서 제외한다.
+- 실제 첫 시리즈의 5세트 전체 타임라인을 검증·저장했고 이후 대진을 순차 수집 중이다.
+  일시정지·재개 구간만 시간에서 제외하며 원본 증거와 벽시계 시간도 보존한다.
+  10초 경계 프레임과 경기 종료 후 고정 응답도 캐시 누락 없이 처리한다.
+- 검증: backend 108 tests, frontend 25 tests, frontend lint/build 및 diff check 통과.
+  outputs/worlds-auto-timeline-verification.json, worlds-free-feed-availability.json,
+  worlds-source-mapping-verification.json과 worlds-auto-timeline-game2.png에 검증 결과 보관.

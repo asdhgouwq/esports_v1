@@ -1,0 +1,12 @@
+import chemtech from '../assets/objectives/dragon-chemtech.png';
+import cloud from '../assets/objectives/dragon-cloud.png';
+import hextech from '../assets/objectives/dragon-hextech.png';
+import infernal from '../assets/objectives/dragon-infernal.png';
+import mountain from '../assets/objectives/dragon-mountain.png';
+import ocean from '../assets/objectives/dragon-ocean.png';
+import elder from '../assets/objectives/dragon-elder.png';
+import dragon from '../assets/objectives/dragon.png';
+import baron from '../assets/objectives/baron.png';
+import herald from '../assets/objectives/herald.png';
+import grubs from '../assets/objectives/grubs.png';
+export const objectiveAssets = {dragon, baron, herald, void_grubs:grubs, elder, chemtech, cloud, hextech, infernal, mountain, ocean};

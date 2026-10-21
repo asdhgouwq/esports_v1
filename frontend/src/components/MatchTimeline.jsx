@@ -1,17 +1,24 @@
-import {useEffect,useState} from 'react';
-import {api} from '../lib/api';
+import {useState} from 'react';
 import ObjectiveTimeline from './ObjectiveTimeline';
 import {Link} from 'react-router-dom';
 import '../styles/match-timeline.css';
 const clock=s=>`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
 const amount=n=>Math.abs(n).toLocaleString('ko-KR');
-export default function MatchTimeline({gameId}){
- const [result,setResult]=useState(null),[revision,setRevision]=useState(0);
- useEffect(()=>{if(!gameId)return;const controller=new AbortController();api.getMatchTimeline(gameId,controller.signal).then(data=>{if(!controller.signal.aborted)setResult({gameId,data});}).catch(()=>{if(!controller.signal.aborted)setResult({gameId,data:{state:'unavailable'}});});return()=>controller.abort();},[gameId,revision]);
- const data=result && result.gameId===gameId?result.data:null;
+const statusMessage = {
+ queued:'이 세트의 경기 흐름을 수집할 차례를 기다리고 있습니다.',
+ collecting:'시간대별 골드와 주요 이벤트를 수집하고 있습니다.',
+ retrying:'경기 기록을 다시 확인하고 있습니다.',
+ waiting_for_source:'공개 원본 기록이 등록되기를 기다리고 있습니다.',
+ waiting_for_players:'선수 기록이 등록되면 경기 흐름을 대조해 연결합니다.',
+ source_unavailable:'이 세트는 현재 공개 원본 기록을 가져올 수 없습니다.',
+ verification_failed:'원본 기록과 경기 정보가 일치하지 않아 표시를 보류했습니다.',
+ not_recorded:'아직 연결된 시간대별 기록이 없습니다.',
+ unavailable:'타임라인을 불러오지 못했습니다.',
+};
+export default function MatchTimeline({gameId,data,collecting,onRetry}){
  if(!gameId)return null;
  if(data?.state==='ready')return <TimelineBoard key={gameId} data={data}/>;
- return <section className="match-timeline timeline-placeholder" aria-label="경기 타임라인"><span className="eyebrow">MATCH TIMELINE</span><h3>경기 흐름</h3><p role="status">{!data?'시간대별 기록을 확인하고 있습니다.':data.state==='not_recorded'?'아직 타임라인을 연결하지 않은 세트입니다.':'타임라인을 불러오지 못했습니다.'}</p>{data?.state==='unavailable'&&<button onClick={()=>setRevision(x=>x+1)}>다시 불러오기</button>}</section>;
+ return <section className="match-timeline timeline-placeholder" aria-label="경기 타임라인" aria-busy={!data||collecting}><span className="eyebrow">MATCH TIMELINE</span><h3>경기 흐름</h3><p role="status">{!data?'시간대별 기록을 확인하고 있습니다.':data.message||statusMessage[data.state]||statusMessage.unavailable}</p>{data&&!collecting&&<button type="button" onClick={onRetry}>다시 확인</button>}</section>;
 }
 function TimelineBoard({data}){
  const [selected,setSelected]=useState(0);
@@ -32,6 +39,6 @@ function TimelineBoard({data}){
  </svg>
  <p className="timeline-time-note">{data.coverage.timeLabel} 골드는 약 10초 간격으로 표시합니다.</p></div>
  <ObjectiveTimeline data={data} onSelect={seconds=>{const i=samples.findIndex(s=>s.seconds>=seconds);setSelected(i<0?samples.length-1:i);}}/>
- <footer className="timeline-source">출처: LoL Esports LiveStats · 정규화·골드 격차 계산·누적 기록의 변화를 표시 · {new Date(data.source.fetchedAt).toLocaleDateString('ko-KR')} 저장 · {data.coverage.rawFrames.toLocaleString()}개 프레임 대조<br/>위치·경험치·유충·스틸 여부는 제공되지 않습니다. <a href={data.source.url} target="_blank" rel="noreferrer">원본 경기 ↗</a> · <Link to="/data-sources">데이터 출처·이용 안내 ↗</Link></footer>
+ <footer className="timeline-source">출처: LoL Esports LiveStats · 정규화·골드 격차 계산·누적 기록의 변화를 표시 · {new Date(data.source.fetchedAt).toLocaleDateString('ko-KR')} 저장 · {data.coverage.rawFrames.toLocaleString()}개 프레임 대조<br/>위치·경험치·유충·전령의 처치 시각·스틸 여부는 이 피드에 제공되지 않습니다. <a href={data.source.url} target="_blank" rel="noreferrer">원본 경기 ↗</a> · <Link to="/data-sources">데이터 출처·이용 안내 ↗</Link></footer>
  </section>;
 }

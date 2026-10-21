@@ -1,0 +1,6 @@
+.team-identity { display: inline-flex; align-items: center; gap: .6em; min-width: 0; vertical-align: middle; }
+.team-identity-logo-end { flex-direction: row-reverse; }
+.team-identity-name { min-width: 0; overflow-wrap: anywhere; }
+.team-logo { display: inline-flex; flex: none; align-items: center; justify-content: center; width: var(--team-logo-size, 28px); height: var(--team-logo-size, 28px); vertical-align: middle; }
+.team-logo img { width: 100%; height: 100%; object-fit: contain; }
+.team-card-identity { flex-direction: column; text-align: center; gap: 10px; --team-logo-size: 44px; }
